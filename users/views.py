@@ -1,10 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
-from .serializers import UserSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer
 from .models import User
 import jwt, datetime
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics
 
 class RegisterView(APIView):
     def post(self, request):
@@ -33,8 +34,9 @@ class LoginView(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
-
+      
+        '''  token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')'''
+        token = jwt.encode(payload, 'secret', algorithm='HS256')
         response = Response()
 
         response.set_cookie(key='jwt', value=token, httponly=True)
@@ -71,3 +73,23 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    
+    queryset = User.objects.all()
+  #  permission_classes = (IsAuthenticated,)
+    serializer_class = ChangePasswordSerializer    
+    def get_object(self):
+        token = self.request.COOKIES.get('jwt')
+        
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+
+        user = User.objects.filter(id=payload['id']).first()
+        return user
