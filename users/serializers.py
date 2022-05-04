@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance        
-
+#UpdatePassword
 class ChangePasswordSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
@@ -47,7 +47,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         try:
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('token expiried')
+            raise AuthenticationFailed('token expired')
         user = User.objects.filter(id=payload['id']).first()
         if not user.check_password(value):
             raise serializers.ValidationError({"old_password": "Old password is not correct"})
@@ -56,6 +56,37 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         
         instance.set_password(validated_data['password'])
+        instance.save()
+
+        return instance
+
+
+#UpdateUserProfile
+class UpdateUserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'name', 'last_name', 'email')
+
+    ''' def validate_email(self, value):
+        user = self.context['request'].user
+        if User.objects.exclude(pk=user.pk).filter(email=value).exists():
+            raise serializers.ValidationError({"email": "This email is already in use."})
+        return value
+
+    def validate_username(self, value):
+        user = self.context['request'].user
+        if User.objects.exclude(pk=user.pk).filter(username=value).exists():
+            raise serializers.ValidationError({"username": "This username is already in use."})
+        return value'''
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data['name']
+        instance.last_name = validated_data['last_name']
+        instance.email = validated_data['email']
+        instance.username = validated_data['username']
+
         instance.save()
 
         return instance
