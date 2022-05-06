@@ -4,6 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.exceptions import ValidationError
 from .serializers import UserSerializer, EmailVerificationSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer, UpdateUserSerializer
 from .models import User
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
@@ -18,6 +19,8 @@ from rest_framework import status,generics
 from django.http import HttpResponse
 from django.contrib import messages
 from django.conf import settings
+from rest_framework.permissions import IsAuthenticated
+#from rest_framework import generics
 
    
 class RegisterView(generics.GenericAPIView):
@@ -97,8 +100,9 @@ class LoginView(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
-
+      
+        '''  token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')'''
+        token = jwt.encode(payload, 'secret', algorithm='HS256')
         response = Response()
 
         response.set_cookie(key='jwt', value=token, httponly=True)
@@ -117,7 +121,7 @@ class UserView(APIView):
             raise AuthenticationFailed('Unauthenticated!')
 
         try:
-            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
 
@@ -135,3 +139,43 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    
+    queryset = User.objects.all()
+  #  permission_classes = (IsAuthenticated,)
+    serializer_class = ChangePasswordSerializer    
+    def get_object(self):
+        token = self.request.COOKIES.get('jwt')
+        
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+
+        user = User.objects.filter(id=payload['id']).first()
+        return user
+
+
+class UpdateProfileView(generics.UpdateAPIView):
+
+    queryset = User.objects.all()
+  #  permission_classes = (IsAuthenticated,)
+    serializer_class = UpdateUserSerializer 
+    def get_object(self):
+        token = self.request.COOKIES.get('jwt')
+        
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+
+        user = User.objects.filter(id=payload['id']).first()
+        return user
