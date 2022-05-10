@@ -2,7 +2,7 @@
 from django.db import models
 import sys
 sys.path.append('../')
-import users.models
+from users.models import User
 
 
 
@@ -23,6 +23,6 @@ class permissions(models.Model):
 
 class Role(models.Model):
     id = models.BigAutoField(auto_created=True, primary_key=True, serialize=False, unique=True)
-    UserID = models.ForeignKey(users.models.User, on_delete=models.CASCADE)
+    UserID = models.ForeignKey(User, default=1, on_delete=models.CASCADE)
     RoleID = models.ForeignKey(permissions, on_delete= models.CASCADE)
-        
+
