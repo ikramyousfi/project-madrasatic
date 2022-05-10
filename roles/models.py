@@ -1,7 +1,13 @@
+
 from django.db import models
+import sys
+sys.path.append('../')
+import users.models
+
+
 
 # Create your models here.
-class Role(models.Model):
+class permissions(models.Model):
     RoleID = models.BigAutoField(auto_created=True, primary_key=True, serialize=False, unique=True)
     RoleName = models.CharField(max_length=32, unique=True, null=False , blank=False)
     CreateAccount       = models.BooleanField(default=False,)
@@ -14,3 +20,9 @@ class Role(models.Model):
     EditCategory        = models.BooleanField(default=False, null=False)
     DeleteCategory      = models.BooleanField(default=False, null=False)
     AddCategory         = models.BooleanField(default=False, null=False)
+
+class Role(models.Model):
+    id = models.BigAutoField(auto_created=True, primary_key=True, serialize=False, unique=True)
+    UserID = models.ForeignKey(users.models.User, on_delete=models.CASCADE)
+    RoleID = models.ForeignKey(permissions, on_delete= models.CASCADE)
+        

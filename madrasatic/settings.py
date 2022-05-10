@@ -89,7 +89,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'madrasatic',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'root',
         'POST': 'localhost',
         'POST':'3306'
     }
