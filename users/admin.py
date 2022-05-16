@@ -12,9 +12,9 @@ class RoleAdmin(admin.ModelAdmin):
     pass
 
 # Register users app models
-@admin.register(UserManager)
-class UserManagerAdmin(admin.ModelAdmin):
-    pass
+# @admin.register(UserManager)
+# class UserManagerAdmin(admin.ModelAdmin):
+#     pass
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
