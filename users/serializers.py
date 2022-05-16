@@ -80,7 +80,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('username', 'name', 'last_name')
+        fields = "__all__" #('username', 'name', 'last_name')
         read_only_fields=['email','id']
 
     ''' def validate_email(self, value):
