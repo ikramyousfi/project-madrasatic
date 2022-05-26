@@ -1,8 +1,16 @@
 from rest_framework import serializers
-from .models import Role
+from .models import permissions
 
-class RoleSerializer(serializers.ModelSerializer):
+class permissionsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Role
+        model = permissions
         fields = "__all__"
        
+
+class UpdateRoleSerializer(serializers.ModelSerializer):
+    
+    
+    class Meta:
+        model = permissions
+        fields = "__all__" 
+        read_only_fields=['RoleID']
