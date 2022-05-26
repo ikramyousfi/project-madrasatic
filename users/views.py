@@ -100,10 +100,15 @@ class LoginView(APIView):
         
         if user is None:
                 raise AuthenticationFailed('User not found!')
+     
+
 
         if not user.check_password(password):
             raise AuthenticationFailed('Incorrect password!')
         
+        if not user.is_active:
+            raise AuthenticationFailed('your acount is disabled!')
+
         payload = {
             'id': user.id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
@@ -194,7 +199,7 @@ class UpdateProfileView(generics.UpdateAPIView):
         if "email" in request.data :
             return Response({"detail" :"You are not allowed to change the email"}, status=status.HTTP_403_FORBIDDEN)
         return super(UpdateProfileView, self).update(request, *args, **kwargs)
-
+    
 
 
 #ResetPassword
