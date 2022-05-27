@@ -11,7 +11,7 @@ from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnico
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'password']
+        fields =  "__all__" #['id', 'name', 'email', 'password'] 
         extra_kwargs = { 
             'password': {'write_only': True}
         }
@@ -81,7 +81,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__" #('username', 'name', 'last_name')
-        read_only_fields=['email','id']
+        read_only_fields=['email','id','password','is_staff','is_verified','is_active']
 
     ''' def validate_email(self, value):
         user = self.context['request'].user
@@ -146,3 +146,12 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
             return (user)
         #return super().validate(attrs)
+
+
+
+class DeactivateAccountSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        min_length=6, max_length=68, write_only=True, required=True)
+    class Meta:
+        model = User
+        fields = ['password']

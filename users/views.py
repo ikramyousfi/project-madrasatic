@@ -4,7 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.exceptions import ValidationError
 from .serializers import UserSerializer, EmailVerificationSerializer
-from .serializers import UserSerializer, ChangePasswordSerializer, RequestPasswordResetEmailSerializer, SetNewPasswordSerializer, UpdateUserSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer, RequestPasswordResetEmailSerializer, SetNewPasswordSerializer, UpdateUserSerializer, DeactivateAccountSerializer
 from .models import User
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
@@ -273,3 +273,36 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response({'success': True, 'message': 'Password reset success'}, status=status.HTTP_200_OK)
+
+
+class Deactivate_account(generics.CreateAPIView):
+    queryset = User.objects.all()
+
+    serializer_class = DeactivateAccountSerializer
+    def get_object(self):
+        token = self.request.COOKIES.get('jwt')
+        
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+
+        user = User.objects.filter(id=payload['id']).first()
+        return user
+        
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        password=request.data.get("password",None)
+        if password:
+            user=self.get_object()
+            if user.check_password(password):
+                user.is_active = False
+                user.save()
+                return Response({ 'success':True,'message': 'Profile successfully disabled!'}, status=status.HTTP_200_OK)
+            else:
+                return Response({" detail":"Password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({ 'success':False,'message': 'A password is required to deactivate your account'}, status=status.HTTP_400_BAD_REQUEST)
