@@ -3,8 +3,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.exceptions import ValidationError
-from .serializers import UserSerializer, EmailVerificationSerializer
-from .serializers import UserSerializer, ChangePasswordSerializer, UpdateUserSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer, UpdateUserSerializer,EmailVerificationSerializer
 from .models import User
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
@@ -20,6 +19,8 @@ from django.http import HttpResponse
 from django.contrib import messages
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
+import os
+
 #from rest_framework import generics
 
    
@@ -43,7 +44,7 @@ class RegisterView(generics.GenericAPIView):
                 relativeLink = reverse('emailverify')
                 
                 absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
-                email_body = 'Hi There'+user.name +' \n Use the link below to verify your email \n' + absurl
+                email_body = 'Hi There '+ user.name +' \n Use the link below to verify your email \n' + absurl
                 to_email= user.email
                # print(to_email)
                 data = {'email_body': email_body, 'to_email': to_email ,'email_subject': 'Verify your email'}
@@ -85,6 +86,8 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data['email']
         password = request.data['password']
+        
+        
 
         user = User.objects.filter(email=email).first()
         
@@ -100,9 +103,8 @@ class LoginView(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-      
-        '''  token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')'''
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
+        token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
+        #token = jwt.encode(payload, 'secret', algorithm='HS256')
         response = Response()
 
         response.set_cookie(key='jwt', value=token, httponly=True)
@@ -115,21 +117,20 @@ class LoginView(APIView):
 class UserView(APIView):
     
     def get(self, request):
-        token = request.COOKIES.get('jwt')
         
+        token = request.COOKIES.get('jwt')
         if not token:
-            raise AuthenticationFailed('Unauthenticated!')
-
+            raise AuthenticationFailed('Unauthenticated!')   
+        
         try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
 
         user = User.objects.filter(id=payload['id']).first()
         serializer = UserSerializer(user)
         return Response(serializer.data)
-
-
+    
 
 class LogoutView(APIView):
     def post(self, request):
@@ -153,12 +154,13 @@ class ChangePasswordView(generics.UpdateAPIView):
             raise AuthenticationFailed('Unauthenticated!')
 
         try:
+            
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!, expired token')
-
         user = User.objects.filter(id=payload['id']).first()
         return user
+    
 
 
 class UpdateProfileView(generics.UpdateAPIView):
@@ -179,3 +181,5 @@ class UpdateProfileView(generics.UpdateAPIView):
 
         user = User.objects.filter(id=payload['id']).first()
         return user
+    
+    

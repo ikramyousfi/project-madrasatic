@@ -10,6 +10,9 @@ urlpatterns = [
 
     path('change_password', ChangePasswordView.as_view(), name='auth_change_password'),
     path('update_profile', UpdateProfileView.as_view(), name='auth_update_profile'),
+    
+    
+    
 ]
 
 
