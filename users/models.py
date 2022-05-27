@@ -31,8 +31,9 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractUser):
-    name = models.CharField(max_length=255)
-    email = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField(max_length=255, unique=True)
+    picture = models.ImageField(blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     password = models.CharField(max_length=255)
     username = models.CharField(max_length=20, unique=True, null=True, blank=True)
