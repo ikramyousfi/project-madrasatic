@@ -34,7 +34,6 @@ class addSignal(generics.GenericAPIView):
     serializer_class = SignalSerializer
     
     def post(self, request,*args,**kwargs):
-            signal = request.data 
             token = request.COOKIES.get('jwt')
         
             
@@ -44,22 +43,25 @@ class addSignal(generics.GenericAPIView):
             if not token:
                 raise AuthenticationFailed('Unauthenticated! you cant send a signal, try to log in ')   
             try:
-                payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+                payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                 raise AuthenticationFailed('Unauthenticated! you cant send a signal, try to log in ')
             
-            #user = User.objects.filter(id=payload['id']).first()
-            #print(payload["id"])
-            
-            new_signal=Signal.objects.create(titre=signal["titre"],description=signal["description"],categorie=signal["categorie"],lieu=signal["lieu"],picture=signal["picture"], user_id=payload["id"])        
-            new_signal.save()
-            #print('hhhhhhhdddddddddddddddhh')
-            #print(new_signal.titre)
-            serializer = SignalSerializer(new_signal)
-            return Response(serializer.data)
+           
+            #new_signal=Signal.objects.create( titre=signal["titre"],description=signal["description"],categorie=signal["categorie"],lieu=signal["lieu"],picture=signal["picture"], user_id=payload["id"])        
+            #new_signal.save()
+            #serializer = SignalSerializer(new_signal)
+            #return Response(serializer.data)
+            #print(payload['id'])  
+            user_id=payload['id']
+            request.data.update({"user":user_id})
+            serializer=self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-       
-
+      # 
     
     
             
