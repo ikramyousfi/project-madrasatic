@@ -43,7 +43,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'users',
-    'roles'
+    'roles',
+    'signaux',
+    
+    
 ]
 
 SITE_ID = 1
@@ -57,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware'
 ]
 '''REST_FRAMEWORK ={ 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -99,7 +103,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'madrasatic',
         'USER': 'root',
-        'PASSWORD': 'chichi34',
+        'PASSWORD': '',
         'POST': 'localhost',
         'POST':'3306'
     }
