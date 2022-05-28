@@ -25,11 +25,11 @@ class Signal(models.Model):
         
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    picture = models.ImageField(blank=True, upload_to='./pics')
+    picture = models.ImageField(blank=True, null=True, upload_to='./pics')
     titre = models.CharField(max_length=255)
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255,blank=True, null=True)
     categorie = models.CharField(max_length=255,choices=categories,default='hygiene',)
-    lieu = models.CharField(max_length=255, null=True)
+    lieu = models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=255,choices=status,default='pending',)
   #  category = models.ForeignKey(Categorie, on_delete=models.CASCADE, default=1)
     
