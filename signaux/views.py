@@ -47,9 +47,14 @@ class ListDeaclaration(generics.ListCreateAPIView):
 
 
     def post(self, request,*args,**kwargs):
-            self.get_queryset()
             token = self.request.COOKIES.get('jwt')
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])   
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
             request.data.update({"user":user_id})
             serializer=self.serializer_class(data=request.data)
@@ -59,6 +64,20 @@ class ListDeaclaration(generics.ListCreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
+class DeclarationDetail(generics.RetrieveDestroyAPIView):
+    serializer_class = DeclarationSerializer
+    def get_queryset(self):
+        
+        token = self.request.COOKIES.get('jwt')
+            
+        if not token:
+                raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+                payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+                raise AuthenticationFailed('Unauthenticated!, expired token')
+        return Declaration.objects.all()
     
     
 
