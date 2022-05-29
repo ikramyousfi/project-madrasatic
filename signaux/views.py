@@ -1,9 +1,10 @@
+from urllib import response
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import SignalSerializer
+from .serializers import SignalSerializer,CategorySerializer
 from users.serializers import UserSerializer
 from rest_framework import generics
-from .models import Signal,Categorie
+from .models import Signal  , Category
 from users.models import User
 from rest_framework.response import Response
 from django.contrib import messages
@@ -61,9 +62,88 @@ class addSignal(generics.GenericAPIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-      # 
+
     
     
+
+
+class CategoriesList(generics.ListCreateAPIView):
+        queryset = Category.objects.all()
+        serializer_class = CategorySerializer
+        #get the current categories
+        def get(self, request, *args, **kwargs) :
+            token = request.COOKIES.get('jwt')
+            if not token:
+                raise AuthenticationFailed('Unauthenticated! , try to log in ')   
+            try:
+                payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                raise AuthenticationFailed('Unauthenticated! , try to log in ')
+            #user_id=payload['id']
+            return super(CategoriesList, self).get(request, *args, **kwargs)
+
+        #add another category 
+        def post(self, request, *args, **kwargs) :
+            token = request.COOKIES.get('jwt')
+            if not token:
+                raise AuthenticationFailed('Unauthenticated! , try to log in ')   
+            try:
+                payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                raise AuthenticationFailed('Unauthenticated! , try to log in ')
+            #user=payload['id']
+            
+            return super(CategoriesList, self).post(request, *args, **kwargs)
+             #response({'message':'You are not allowed to make this action'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    
+        
+    
+    def get(self, request, *args, **kwargs):
+        token = self.request.COOKIES.get('jwt')
+            
+        if not token:
+                raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+                payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+                raise AuthenticationFailed('Unauthenticated!, expired token')
+        return super(CategoryDetailView, self).get(request, *args, **kwargs)
+
+   
+
+    def patch(self, request, *args, **kwargs):
+        token = self.request.COOKIES.get('jwt')
+        
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+        return super(CategoryDetailView, self).patch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        token = self.request.COOKIES.get('jwt')
+        
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+        return super(CategoryDetailView, self).delete(request, *args, **kwargs)
+    
+    
+
+        
             
         
     

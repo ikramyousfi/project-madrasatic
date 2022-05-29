@@ -1,9 +1,13 @@
 from django.urls import path
-from .views import addSignal
+from .views import addSignal , CategoriesList, CategoryDetailView
 
 
 urlpatterns = [
-    path('signal', addSignal.as_view()),
-    #path('categorie', displayCategorie.as_view())
-    
+    path('add_signal', addSignal.as_view()),
+    path('ListCategory', CategoriesList.as_view()),   
+    path('Category/<pk>', CategoryDetailView.as_view())
+ 
 ]
+
+
+

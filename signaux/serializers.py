@@ -1,7 +1,12 @@
 from rest_framework import serializers
-from .models import Signal, Categorie
+from .models import Category, Signal
 
 class SignalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Signal
-        fields = ['titre', 'description', 'categorie', 'lieu', 'picture','user']
+        fields = ['title', 'description', 'category', 'place', 'picture','user']
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields="__all__"
