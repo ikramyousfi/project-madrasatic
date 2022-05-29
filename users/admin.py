@@ -22,7 +22,7 @@ class RoleAdmin(admin.ModelAdmin):
 class UserAdmin(admin.ModelAdmin):
     pass
 
-@admin.register(Signal)
+@admin.register(Declaration)
 class SignalsAdmin(admin.ModelAdmin):
     pass
 

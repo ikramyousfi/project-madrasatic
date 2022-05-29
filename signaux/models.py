@@ -12,11 +12,12 @@ class Category(models.Model):
     description = models.CharField(max_length=255)
     
     
-class Signal(models.Model):
+class Declaration(models.Model):
     status = [
         ('pending', 'pending'),
         ('rejected', 'rejected'),
         ('accepted', 'accepted'),
+        ('treated','treated')
         
     ]
     #categories = [
