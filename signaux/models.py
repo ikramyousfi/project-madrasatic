@@ -10,7 +10,8 @@ class Category(models.Model):
   #picture = models.ImageField(blank=True, null=True, upload_to='./pics')
     title = models.CharField(max_length=255, unique=True)
     description = models.CharField(max_length=255)
-    
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Category")
+
     
 class Declaration(models.Model):
     status = [

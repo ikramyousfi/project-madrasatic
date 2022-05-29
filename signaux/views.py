@@ -96,9 +96,22 @@ class CategoriesList(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             return Category.objects.all()
-        def post(self, request, *args, **kwargs):
-            self.get_queryset()
-            return super().post(request, *args, **kwargs)
+        def post(self, request,*args,**kwargs):
+            token = self.request.COOKIES.get('jwt')
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            request.data.update({"created_by":user_id})
+            serializer=self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         #get the current categories
         #add another category, we need to override it in order to restrict it to the user 
 
