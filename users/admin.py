@@ -25,3 +25,7 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Signal)
 class SignalsAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(Category)
+class CategoriesAdmin(admin.ModelAdmin):
+    pass
