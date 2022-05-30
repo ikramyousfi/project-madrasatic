@@ -17,26 +17,24 @@ class Declaration(models.Model):
     status = [
         ('pending', 'pending'),
         ('rejected', 'rejected'),
-        ('accepted', 'accepted'),
-        ('treated','treated')
+        ('approved', 'approved'),
+        ('treated','treated'),
+        ('request_change','request_change')
         
     ]
-    #categories = [
-       # ('hygiene', 'hygiene'),
-       # ('materiel', 'materiel'),
-       # ('electrecite', 'electrecite'),
-        
-   # ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Signal")
     picture = models.ImageField(blank=True, null=True, upload_to='./pics')
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255,blank=True, null=True)
-    #category = models.CharField(max_length=255,choices=categories,default='hygiene',)
     category=models.ForeignKey(Category, on_delete=models.CASCADE,related_name="Signal") 
     place= models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=255,choices=status,default='pending',)
-  #  category = models.ForeignKey(Categorie, on_delete=models.CASCADE, default=1)
-    
-    
     
 
+class RequestForChange(models.Model):
+  title = models.CharField(max_length=255, blank=True, null=True)
+  comment = models.TextField(max_length=255, blank=True, null=True)
+  checked = models.BooleanField(default=False)
+  responsable = models.ForeignKey(User, on_delete=models.CASCADE , null=True, blank=True)
+  declaration = models.ForeignKey(Declaration, on_delete=models.CASCADE, related_name="change_requests",   null=True, blank=True)
