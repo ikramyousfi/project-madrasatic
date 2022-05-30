@@ -17,12 +17,12 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth.models import User
 from rest_framework.exceptions import AuthenticationFailed
 from django.http import HttpResponse
-
+from django.db.models import Q
 # Create your views here.
-class ListDeaclaration(generics.ListCreateAPIView):
+class ListDeclaration(generics.ListCreateAPIView):
     serializer_class = DeclarationSerializer
 
-    #user can see his own declaration
+    #user can see his own declarations
     def get_queryset(self):
             token = self.request.COOKIES.get('jwt')
                 
@@ -47,7 +47,9 @@ class ListDeaclaration(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            request.data.update({"responsable":user_id})
+            declaration_status="pending"
+            request.data.update({"user":user_id})
+            request.data.update({"status":declaration_status})
             serializer=self.serializer_class(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -228,3 +230,40 @@ class RequestedChangeListView(generics.ListAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             return Declaration.objects.filter(status="request_change").all() 
+
+
+class ListDrafts(generics.ListCreateAPIView):
+    serializer_class = DeclarationSerializer
+
+    #user can get a list of the declarations that are drafts
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            return Declaration.objects.filter(user=user_id,status='draft').all()
+
+    #user can create a declaration and it stays as drafts 
+    def post(self, request,*args,**kwargs):
+            token = self.request.COOKIES.get('jwt')
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            request.data.update({"user":user_id})
+
+            serializer=self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

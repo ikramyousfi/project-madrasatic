@@ -19,7 +19,8 @@ class Declaration(models.Model):
         ('rejected', 'rejected'),
         ('approved', 'approved'),
         ('treated','treated'),
-        ('request_change','request_change')
+        ('request_change','request_change'),
+        ('draft','draft')
         
     ]
 
@@ -29,7 +30,7 @@ class Declaration(models.Model):
     description = models.CharField(max_length=255,blank=True, null=True)
     category=models.ForeignKey(Category, on_delete=models.CASCADE,related_name="Signal") 
     place= models.CharField(max_length=255, blank=True, null=True)
-    status = models.CharField(max_length=255,choices=status,default='pending',)
+    status = models.CharField(max_length=255,choices=status,default='draft',)
     
 
 class RequestForChange(models.Model):

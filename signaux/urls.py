@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import ListDeaclaration , CategoriesList, CategoryDetailView, DeclarationDetail,ToBeApprovedUpdateView,ToBeApprovedListView,RejectedListView,ApprovedListView,TreatedListView,RequestedChangeListView
+from .views import ListDeclaration , CategoriesList, CategoryDetailView, DeclarationDetail,ToBeApprovedUpdateView,ToBeApprovedListView,RejectedListView,ApprovedListView,TreatedListView,RequestedChangeListView,ListDrafts
 urlpatterns = [
-    path('ListDeclaration', ListDeaclaration.as_view()),
+    path('ListDeclaration', ListDeclaration.as_view()),
     path('ListCategory', CategoriesList.as_view()),   
     path('Category/<pk>', CategoryDetailView.as_view()),
     path('Declaration/<pk>', DeclarationDetail.as_view()),
@@ -11,6 +11,7 @@ urlpatterns = [
     path('Approved_declarations', ApprovedListView.as_view()),
     path('Treated_declarations', TreatedListView.as_view()),
     path('Requested_change_declarations', RequestedChangeListView.as_view()),
+    path('drafts', ListDrafts.as_view())
 
 
 

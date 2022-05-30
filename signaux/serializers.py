@@ -24,7 +24,7 @@ class DeclarationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Declaration
         fields = '__all__'
-        read_only_fields=['status']
+        #read_only_fields=['status']
 
 class DeclarationStatusSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
