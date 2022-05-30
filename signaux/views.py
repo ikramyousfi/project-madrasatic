@@ -37,7 +37,6 @@ class addSignal(generics.GenericAPIView):
             signal = request.data 
             token = request.COOKIES.get('jwt')
         
-            
            # cat = Categorie.objects.get(id=5)
             #print(cat.id)
             
