@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from .models import User
+from .models import *
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
@@ -155,3 +155,9 @@ class DeactivateAccountSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ['password']
+        
+
+class roleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = role
+        fields = '__all__'

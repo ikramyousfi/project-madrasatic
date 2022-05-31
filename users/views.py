@@ -1,11 +1,13 @@
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.exceptions import ValidationError
-from .serializers import UserSerializer, ChangePasswordSerializer, UpdateUserSerializer,EmailVerificationSerializer
-from .serializers import UserSerializer, ChangePasswordSerializer, RequestPasswordResetEmailSerializer, SetNewPasswordSerializer, UpdateUserSerializer, DeactivateAccountSerializer
-from .models import User
+#from .serializers import UserSerializer, ChangePasswordSerializer, UpdateUserSerializer,EmailVerificationSerializer
+#from .serializers import UserSerializer, ChangePasswordSerializer, RequestPasswordResetEmailSerializer, SetNewPasswordSerializer, UpdateUserSerializer, DeactivateAccountSerializer
+from .models import *
+from .serializers import *
 from .utils import Util
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -17,18 +19,11 @@ from django.http import HttpResponsePermanentRedirect
 from django.shortcuts import redirect
 from rest_framework import status,generics
 from django.http import HttpResponse
-from django.contrib import messages
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics,status,views
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.shortcuts import redirect
-from django.http import HttpResponsePermanentRedirect
-from django.urls import reverse
-from .utils import Util
-from django.contrib.sites.shortcuts import get_current_site
 import os
 
 
@@ -309,3 +304,44 @@ class Deactivate_account(generics.CreateAPIView):
                 return Response({" detail":"Password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({ 'success':False,'message': 'A password is required to deactivate your account'}, status=status.HTTP_400_BAD_REQUEST)
+
+class roleView(viewsets.ModelViewSet):
+    serializer_class = roleSerializer
+    queryset = role.objects.all()
+
+    def create(self, request):
+        test=role.addRole(request.data['id_user'], request.data['Type'])
+        print(test)
+
+        if test is True:
+            print("ouadoud")
+            return super().create(request)
+            
+        if test is False:
+            print("mahdaoui")
+            return Response({"detail": 'role already exists'}, status=status.HTTP_200_OK)
+            
+        
+    def destroy(self, request, *args, **kwargs):
+        role.deleteRole(self.get_object().id_user,self.get_object().Type)
+        return super().destroy(request)
+    
+    
+
+#class UserRolesView(viewsets.ModelViewSet):
+#    serializer_class = roleSerializer
+
+#    def get_queryset(self):
+#        id_user= self.kwargs.get('pk')
+#        print(id_user)
+#        return role.objects.filter(id_user=id_user)
+
+#    def create(self, request):
+#        if role.addRole(request.data['id_user'], request.data['Type']) is False:
+#            return super().create(request)
+#        else:
+#            return Response({"detail": 'role already exists'})
+
+#    def destroy(self, request, *args, **kwargs):
+#        role.deleteRole(self.get_object().idUtilisateurR, self.get_object().Type)
+#        return super().destroy(request)
