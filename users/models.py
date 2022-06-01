@@ -52,12 +52,12 @@ class User(AbstractUser):
     def roles(self):
         return self.role_set.all()
 
-    #def has_perm(self, perm, obj=None):
-     #   return self.is_superuser
+    def has_perm(self, perm, obj=None):
+        return self.is_superuser
 
     
-    #def has_module_perms(self, app_label):
-     #   return True
+    def has_module_perms(self, app_label):
+        return True
     
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -81,12 +81,12 @@ class role(models.Model):
         return self.get_Type_display() 
     
     def addRole(id_user,Type):
-        group = Group.objects.get(name=Type)
-        user=User.objects.get(id=id_user)
-        if group not in user.groups.all():
-            user.groups.add(group)
-            return True
-        else : return False
+            group = Group.objects.get(name=Type)
+            user=User.objects.get(id=id_user)
+            if group not in user.groups.all():
+                user.groups.add(group)
+                return True
+            else : return False
     
     
     def deleteRole(id_user,Type):
