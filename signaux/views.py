@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from .serializers import DeclarationSerializer,CategorySerializer,DeclarationStatusSerializer
 from users.serializers import UserSerializer
 from rest_framework import generics
-from .models import Declaration  , Category
+from .models import Declaration  , Category, RequestForChange
 from users.models import User
 from rest_framework.response import Response
 from django.contrib import messages
@@ -267,3 +267,65 @@ class ListDrafts(generics.ListCreateAPIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+#user can update his declaration only if it's draft or change request 
+class UpdateDeclarationView(generics.UpdateAPIView):
+    def get_queryset(self):
+        token = self.request.COOKIES.get('jwt')
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!, expired token')
+        user_id=payload['id']
+        return Declaration.objects.filter(user=user_id).all()
+
+    serializer_class = DeclarationSerializer
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print(instance.status)
+        if instance.status=='draft':
+            print("reached draft if")
+            serializer=self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+            return super(UpdateDeclarationView,self).update(request, *args, **kwargs)
+        elif instance.status=='request_change':
+            print(RequestForChange.objects.filter(declaration=instance.id))
+            print("reached change_request if")
+            declaration_status='pending'
+            request.data.update({"status":declaration_status})
+            RequestForChange.objects.filter(declaration=instance.id).update(checked=True)
+            serializer=self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+            return super(UpdateDeclarationView,self).update(request, *args, **kwargs)
+        else:
+            return Response({"detail":"you are not allowed to modify your declaration"}, status=status.HTTP_400_BAD_REQUEST)
+
+        
+
+
+
+#List of declaration for each service Service
+#not implemented yet i need to figure out a way to link between the category and its service 
+class ServiceDeclarationList(generics.ListAPIView):
+    serializer_class = DeclarationSerializer
+
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            return Declaration.objects.filter(user=user_id).all()
+
