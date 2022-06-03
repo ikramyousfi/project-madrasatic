@@ -9,6 +9,7 @@ from .views import RegisterView, LoginView, UserView,  LogoutView, VerifyEmail,D
 router = routers.DefaultRouter()
 router.register(r'roles', roleView, basename='roles')
 
+
 urlpatterns = [
     path('gestionComptes/', include(router.urls)),
     path('register', RegisterView.as_view()),

@@ -112,7 +112,7 @@ class LoginView(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
+        token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
         #token = jwt.encode(payload, 'secret', algorithm='HS256')
         response = Response()
 
@@ -309,39 +309,31 @@ class roleView(viewsets.ModelViewSet):
     serializer_class = roleSerializer
     queryset = role.objects.all()
 
+    
     def create(self, request):
+        token = self.request.COOKIES.get('jwt')
+        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        user = User.objects.filter(id=payload['id']).first()
+        
+        
         test=role.addRole(request.data['id_user'], request.data['Type'])
-        print(test)
-
-        if test is True:
-            print("ouadoud")
-            return super().create(request)
+        #print(request.data['id_user'])
+        #print(test)
+        
+        if not token:
+            raise AuthenticationFailed('Admin Unauthenticated!')   
+        else:
+            if user.is_superuser:
+                if test is True:
+                    return super().create(request)
             
-        if test is False:
-            print("mahdaoui")
-            return Response({"detail": 'role already exists'}, status=status.HTTP_200_OK)
-            
+                if test is False:
+                    return Response({"detail": 'role already exists'}, status=status.HTTP_200_OK)
+                
+            else : return Response({"detail": 'Please connect as admin to gives roles'}, status=status.HTTP_200_OK)
         
     def destroy(self, request, *args, **kwargs):
         role.deleteRole(self.get_object().id_user,self.get_object().Type)
         return super().destroy(request)
     
     
-
-#class UserRolesView(viewsets.ModelViewSet):
-#    serializer_class = roleSerializer
-
-#    def get_queryset(self):
-#        id_user= self.kwargs.get('pk')
-#        print(id_user)
-#        return role.objects.filter(id_user=id_user)
-
-#    def create(self, request):
-#        if role.addRole(request.data['id_user'], request.data['Type']) is False:
-#            return super().create(request)
-#        else:
-#            return Response({"detail": 'role already exists'})
-
-#    def destroy(self, request, *args, **kwargs):
-#        role.deleteRole(self.get_object().idUtilisateurR, self.get_object().Type)
-#        return super().destroy(request)
