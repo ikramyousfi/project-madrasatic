@@ -48,8 +48,10 @@ class ListDeclaration(generics.ListCreateAPIView):
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
             declaration_status="pending"
+
             request.data.update({"user":user_id})
             request.data.update({"status":declaration_status})
+            request.data.update()
             serializer=self.serializer_class(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -329,3 +331,24 @@ class ServiceDeclarationList(generics.ListAPIView):
             user_id=payload['id']
             return Declaration.objects.filter(user=user_id).all()
 
+#attaching declaration
+class AttachDeclarationView(generics.CreateAPIView):
+    serializer_class = DeclarationSerializer
+    def get_queryset(self):
+        
+        return Declaration.objects.filter(status="pending").all()
+    def post(self, request, *args, **kwargs):
+                
+                token = self.request.COOKIES.get('jwt')
+                    
+                if not token:
+                        raise AuthenticationFailed('Unauthenticated!')
+
+                try:
+                        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+                except jwt.ExpiredSignatureError:
+                        raise AuthenticationFailed('Unauthenticated!, expired token')
+                user_id = payload['id']
+                request.data.update({"responsable":user_id})
+                return super(AttachDeclarationView, self).post(request, *args, **kwargs)
+    

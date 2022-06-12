@@ -9,8 +9,11 @@ class Category(models.Model):
       
   #picture = models.ImageField(blank=True, null=True, upload_to='./pics')
     title = models.CharField(max_length=255, unique=True)
-    description = models.CharField(max_length=255)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Category")
+    description = models.CharField(max_length=255,null=True,blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
+    
+    def __str__(self):
+        return self.title
 
     
 class Declaration(models.Model):
@@ -24,14 +27,14 @@ class Declaration(models.Model):
         
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Signal")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="declarations")
     picture = models.ImageField(blank=True, null=True, upload_to='./pics')
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=255,blank=True, null=True)
-    category=models.ForeignKey(Category, on_delete=models.CASCADE,related_name="Signal") 
+    category=models.ForeignKey(Category, on_delete=models.CASCADE,related_name="declarations") 
     place= models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=255,choices=status,default='draft',)
-    
+    attached_declarations = models.ManyToManyField('self',  related_name="attach_to", symmetrical=False,  null=True, blank=True)
 
 class RequestForChange(models.Model):
   title = models.CharField(max_length=255, blank=True, null=True)

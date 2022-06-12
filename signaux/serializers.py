@@ -1,3 +1,4 @@
+from pkg_resources import require
 from rest_framework import serializers
 from .models import Category, Declaration, RequestForChange
 from rest_framework.exceptions import AuthenticationFailed
@@ -11,21 +12,50 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields="__all__"
 
-
-
 class RequestForChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequestForChange
         fields = "__all__"
-
-class DeclarationSerializer(serializers.ModelSerializer):
+class SubDeclarationSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
-
+    category = serializers.StringRelatedField()
     class Meta:
         model = Declaration
         fields = '__all__'
         #read_only_fields=['status']
+    def to_representation(self, instance):
+        rep = super(DeclarationSerializer, self).to_representation(instance)
+        rep['category'] = instance.category.title
+        return rep
+    def to_internal_value(self, data):
+      try:
+        data['user'] = User.objects.get(id=data['user'])
+        data['category'] =  Category.objects.only('id').get(title=data['category'])
+        return data 
+      except:
+          raise Category.DoesNotExist("Category does not exist")
+          
 
+class DeclarationSerializer(serializers.ModelSerializer):
+    change_requests = RequestForChangeSerializer(many=True, required=False)
+    category = serializers.StringRelatedField()
+    attached_declarations=SubDeclarationSerializer(many=True,required=False)
+    class Meta:
+        model = Declaration
+        fields = '__all__'
+        #read_only_fields=['status']
+    def to_representation(self, instance):
+        rep = super(DeclarationSerializer, self).to_representation(instance)
+        rep['category'] = instance.category.title
+        return rep
+    def to_internal_value(self, data):
+      try:
+        data['user'] = User.objects.get(id=data['user'])
+        data['category'] =  Category.objects.only('id').get(title=data['category'])
+        return data 
+      except:
+          raise Category.DoesNotExist("Category does not exist")
+          
 class DeclarationStatusSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
    # change_requests_list = validated_data.pop("change_requests", None)
