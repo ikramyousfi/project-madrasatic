@@ -1,7 +1,7 @@
 from urllib import response
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import DeclarationSerializer,CategorySerializer,DeclarationStatusSerializer
+from .serializers import DeclarationSerializer,CategorySerializer,DeclarationStatusSerializer,BaseDeclarationSerializer
 from users.serializers import UserSerializer
 from rest_framework import generics
 from .models import Declaration  , Category, RequestForChange
@@ -332,23 +332,33 @@ class ServiceDeclarationList(generics.ListAPIView):
             return Declaration.objects.filter(user=user_id).all()
 
 #attaching declaration
-class AttachDeclarationView(generics.CreateAPIView):
-    serializer_class = DeclarationSerializer
+class AttachDeclarationView(generics.UpdateAPIView):
+    serializer_class =BaseDeclarationSerializer
     def get_queryset(self):
-        
-        return Declaration.objects.filter(status="pending").all()
-    def post(self, request, *args, **kwargs):
-                
-                token = self.request.COOKIES.get('jwt')
+         
+        token = self.request.COOKIES.get('jwt')
                     
-                if not token:
+        if not token:
                         raise AuthenticationFailed('Unauthenticated!')
 
-                try:
+        try:
                         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-                except jwt.ExpiredSignatureError:
+        except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
-                user_id = payload['id']
-                request.data.update({"responsable":user_id})
-                return super(AttachDeclarationView, self).post(request, *args, **kwargs)
-    
+        return Declaration.objects.filter(status="pending").all()
+ 
+class AttachDeclarationView(generics.UpdateAPIView):
+    serializer_class =DeclarationSerializer
+    def get_queryset(self):
+         
+        token = self.request.COOKIES.get('jwt')
+                    
+        if not token:
+                        raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+                        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+                        raise AuthenticationFailed('Unauthenticated!, expired token')
+        return Declaration.objects.filter(status="pending").all()
+ 

@@ -16,30 +16,19 @@ class RequestForChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequestForChange
         fields = "__all__"
-class SubDeclarationSerializer(serializers.ModelSerializer):
+
+class BaseDeclarationSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
     category = serializers.StringRelatedField()
     class Meta:
         model = Declaration
         fields = '__all__'
-        #read_only_fields=['status']
-    def to_representation(self, instance):
-        rep = super(DeclarationSerializer, self).to_representation(instance)
-        rep['category'] = instance.category.title
-        return rep
-    def to_internal_value(self, data):
-      try:
-        data['user'] = User.objects.get(id=data['user'])
-        data['category'] =  Category.objects.only('id').get(title=data['category'])
-        return data 
-      except:
-          raise Category.DoesNotExist("Category does not exist")
-          
+  
 
 class DeclarationSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
     category = serializers.StringRelatedField()
-    attached_declarations=SubDeclarationSerializer(many=True,required=False)
+    attached_declarations=BaseDeclarationSerializer(many=True,required=False,read_only=True)
     class Meta:
         model = Declaration
         fields = '__all__'
@@ -55,7 +44,20 @@ class DeclarationSerializer(serializers.ModelSerializer):
         return data 
       except:
           raise Category.DoesNotExist("Category does not exist")
-          
+
+    def update(self, instance, validated_data):
+        change_requests_list = validated_data.pop("change_requests", None)
+        responsable=self.context['request'].data['responsable']
+        responsable=User.objects.get(id=responsable)
+
+
+        if change_requests_list:
+            for change_request in change_requests_list:
+                RequestForChange.objects.create(declaration=instance, **change_request, responsable=responsable)
+        instance.status = validated_data["status"]
+        
+        instance.save()
+        return instance   
 class DeclarationStatusSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
    # change_requests_list = validated_data.pop("change_requests", None)

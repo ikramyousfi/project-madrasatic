@@ -34,7 +34,7 @@ class Declaration(models.Model):
     category=models.ForeignKey(Category, on_delete=models.CASCADE,related_name="declarations") 
     place= models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=255,choices=status,default='draft',)
-    attached_declarations = models.ManyToManyField('self',  related_name="attach_to", symmetrical=False,  null=True, blank=True)
+    attached_to= models.ForeignKey('self',  on_delete=models.SET_NULL, related_name="attached_declarations",   default=None, null=True, blank=True)
 
 class RequestForChange(models.Model):
   title = models.CharField(max_length=255, blank=True, null=True)
@@ -42,3 +42,4 @@ class RequestForChange(models.Model):
   checked = models.BooleanField(default=False)
   responsable = models.ForeignKey(User, on_delete=models.CASCADE , null=True, blank=True)
   declaration = models.ForeignKey(Declaration, on_delete=models.CASCADE, related_name="change_requests",   null=True, blank=True)
+
