@@ -44,8 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'signaux',
-    
-    
+    'reports'
 ]
 
 SITE_ID = 1
@@ -100,9 +99,9 @@ WSGI_APPLICATION = 'madrasatic.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'madrasatic',
+        'NAME': 'madrasatic_6',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'chichi34',
         'POST': 'localhost',
         'POST':'3306'
     }
