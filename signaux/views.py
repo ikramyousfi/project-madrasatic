@@ -345,20 +345,28 @@ class AttachDeclarationView(generics.UpdateAPIView):
                         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Declaration.objects.filter(status="pending").all()
+        return Declaration.objects.all()
  
-class AttachDeclarationView(generics.UpdateAPIView):
-    serializer_class =DeclarationSerializer
+#Deattach Declaration
+class DeattachDeclarationView(generics.GenericAPIView):
+    serializer_class =BaseDeclarationSerializer
     def get_queryset(self):
-         
         token = self.request.COOKIES.get('jwt')
-                    
         if not token:
                         raise AuthenticationFailed('Unauthenticated!')
-
         try:
                         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Declaration.objects.filter(status="pending").all()
- 
+        return Declaration.objects.all()
+    def post(self, request,   *args, **kwargs):
+        try:
+                declaration=self.get_object()
+                org_declaration=declaration.attached_to
+                org_declaration.attached_declarations.remove(declaration)
+                declaration.attached_to=None
+                print(org_declaration)
+                return Response({"detail":"success"}, status=status.HTTP_200_OK)
+        except:
+                return Response({"detail":"error"}, status=status.HTTP_400_BAD_REQUEST)  
+    
