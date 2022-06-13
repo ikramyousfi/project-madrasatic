@@ -45,22 +45,10 @@ class DeclarationSerializer(serializers.ModelSerializer):
       except:
           raise Category.DoesNotExist("Category does not exist")
 
-    def update(self, instance, validated_data):
-        change_requests_list = validated_data.pop("change_requests", None)
-        responsable=self.context['request'].data['responsable']
-        responsable=User.objects.get(id=responsable)
-
-
-        if change_requests_list:
-            for change_request in change_requests_list:
-                RequestForChange.objects.create(declaration=instance, **change_request, responsable=responsable)
-        instance.status = validated_data["status"]
-        
-        instance.save()
-        return instance   
+     
 class DeclarationStatusSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
-   # change_requests_list = validated_data.pop("change_requests", None)
+    attached_declarations=BaseDeclarationSerializer(many=True,required=False,read_only=True)
 
     def update(self, instance, validated_data):
         change_requests_list = validated_data.pop("change_requests", None)

@@ -148,6 +148,10 @@ class ToBeApprovedUpdateView(generics.UpdateAPIView):
                         raise AuthenticationFailed('Unauthenticated!, expired token')
                 user_id = payload['id']
                 request.data.update({"responsable":user_id})
+                instance=self.get_object()
+                if request.data["status"]=="treated":
+                        instance.attached_declarations.update(status="treated")
+
                 return super(ToBeApprovedUpdateView, self).update(request, *args, **kwargs)
     
 
@@ -346,7 +350,6 @@ class AttachDeclarationView(generics.UpdateAPIView):
         except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
         return Declaration.objects.all()
- 
 #Deattach Declaration
 class DeattachDeclarationView(generics.GenericAPIView):
     serializer_class =BaseDeclarationSerializer
