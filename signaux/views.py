@@ -59,7 +59,7 @@ class ListDeclaration(generics.ListCreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
-class DeclarationDetail(generics.RetrieveDestroyAPIView):
+class DeclarationDetail(generics.RetrieveAPIView):
     serializer_class = DeclarationSerializer
     #details about a specific declaration
     def get_queryset(self):
@@ -75,8 +75,6 @@ class DeclarationDetail(generics.RetrieveDestroyAPIView):
                 raise AuthenticationFailed('Unauthenticated!, expired token')
         return Declaration.objects.all()
     
-    #delete a specific declaration : needs to be permit to the responsible only 
-
 
 class CategoriesList(generics.ListCreateAPIView):
 
@@ -205,7 +203,7 @@ class ApprovedListView(generics.ListAPIView):
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             return Declaration.objects.filter(status="approved").all()
 
-#List all approved declarations
+#List all treated declarations
 class TreatedListView(generics.ListAPIView):
     
     serializer_class = DeclarationSerializer
