@@ -1,3 +1,4 @@
+from unittest import installHandler
 from django.shortcuts import render
 from .serializers import ReportRequestForChangeSerializer,ReportSerializer,ReportStatusSerializer
 from .models import Report, User, ReportRequestForChange, Declaration
@@ -97,6 +98,13 @@ class ToBeApprovedReportsUpdateView(generics.UpdateAPIView):
                         raise AuthenticationFailed('Unauthenticated!, expired token')
                 user_id = payload['id']
                 request.data.update({"responsable":user_id})
+                report=self.get_object()
+                print(report)
+                if request.data["status"]=="approved":
+                    if report.declaration_treated:
+                        report.declaration.status='treated'
+                        report.declaration.save()
+                        report.declaration.attached_declarations.update(status='treated')
                 return super(ToBeApprovedReportsUpdateView, self).update(request, *args, **kwargs)
 
     #details about a specific report
@@ -164,7 +172,7 @@ class ApprovedReportListView(generics.ListAPIView):
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             return Report.objects.filter(status="approved").all()
 
-#List the Approved Reports for Responsible
+#List the Change request Reports for Responsible
 class RequestChangeReportListView(generics.ListAPIView):
     
     serializer_class = ReportSerializer
