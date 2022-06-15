@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'signaux',
-    'reports'
+    'reports',
+    'announcements'
 ]
 
 SITE_ID = 1
