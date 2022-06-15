@@ -1,5 +1,5 @@
 from django.urls import path
-from announcements.views import AnnouncementDetail, ApprovedAnnouncementListView, ListAnnouncement, RejectedAnnouncementListView, RequestChangeAnnouncementListView, ToBeApprovedAnnouncementListView, ToBeApprovedAnnouncementsUpdateView, UpdateAnnouncementView
+from announcements.views import AnnouncementDetail, ApprovedAnnouncementListView, DeleteUserAnnouncement, ListAnnouncement, RejectedAnnouncementListView, RequestChangeAnnouncementListView, ToBeApprovedAnnouncementListView, ToBeApprovedAnnouncementsUpdateView, UpdateAnnouncementView
 
 urlpatterns =[
     path('ListAnnouncement',ListAnnouncement.as_view()),
@@ -10,4 +10,6 @@ urlpatterns =[
     path('Rejected_announcements', RejectedAnnouncementListView.as_view()),
     path('Approved_announcements', ApprovedAnnouncementListView.as_view()),
     path('Request_change_announcements', RequestChangeAnnouncementListView.as_view()),
+        path('Delete_announcement/<pk>', DeleteUserAnnouncement.as_view()),
+
 ]

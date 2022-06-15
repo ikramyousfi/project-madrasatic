@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
+from django.db.models import Q
 
 
 
@@ -116,7 +117,7 @@ class AnnouncementDetail(generics.RetrieveAPIView):
                 payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                 raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Announcement.objects.all()
+        return Announcement.objects.filter(status="approved")
 
 #List the Pending announcements for Responsible
 class ToBeApprovedAnnouncementListView(generics.ListAPIView):
@@ -181,3 +182,20 @@ class RequestChangeAnnouncementListView(generics.ListAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             return Announcement.objects.filter(status="request_change").all()
+
+#Service agent or club  can delete a declaration he created when it's draft or pending
+
+class DeleteUserAnnouncement(generics.DestroyAPIView):  
+    serializer_class = AnnouncementSerializer
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            return Announcement.objects.filter(  Q(created_by=user_id,status="draft") or Q(created_by=user_id,status="pending"))
