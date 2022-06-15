@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-n1t$i%vqx7zvj&0wjq^q4mi9zvt*$l+^r*ufs+7%n(ew5vy#)8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 import encodings.idna
 
 AUTH_USER_MODEL = 'users.User'
