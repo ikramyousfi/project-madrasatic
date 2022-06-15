@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
+from django.db.models import Q
 
 
 
@@ -187,3 +188,20 @@ class RequestChangeReportListView(generics.ListAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             return Report.objects.filter(status="request_change").all()
+
+#Service agent can delete a declaration he created when it's draft or pending
+
+class DeleteUserReport(generics.DestroyAPIView):  
+    serializer_class = ReportSerializer
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            return Report.objects.filter(  Q(created_by=user_id,status="draft") or Q(created_by=user_id,status="pending"))
