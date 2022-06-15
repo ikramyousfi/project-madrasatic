@@ -34,7 +34,7 @@ class ListDeclaration(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            return Declaration.objects.filter(user=user_id).all()
+            return Declaration.objects.filter(user=user_id)
 
     #user can create a declaration
     def post(self, request,*args,**kwargs):
@@ -131,7 +131,7 @@ class ToBeApprovedUpdateView(generics.UpdateAPIView):
     serializer_class = DeclarationStatusSerializer
     def get_queryset(self):
         
-        return Declaration.objects.filter(status="pending").all()
+        return Declaration.objects.filter(status="pending")
     def update(self, request, *args, **kwargs):
                 
                 token = self.request.COOKIES.get('jwt')
@@ -166,7 +166,7 @@ class ToBeApprovedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="pending").all()
+            return Declaration.objects.filter(status="pending",attached_to=None)
 
 
 #List the rejected declarations for responsible
@@ -183,7 +183,7 @@ class RejectedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="rejected").all()
+            return Declaration.objects.filter(status="rejected",attached_to=None)
    
             
 #List all approved declarations
@@ -200,7 +200,7 @@ class ApprovedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="approved").all()
+            return Declaration.objects.filter(status="approved",attached_to=None)
 
 #List all treated declarations
 class TreatedListView(generics.ListAPIView):
@@ -216,7 +216,7 @@ class TreatedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="treated").all()
+            return Declaration.objects.filter(status="treated",attached_to=None)
 
 #List the requested for change declarations
 class RequestedChangeListView(generics.ListAPIView):
@@ -232,7 +232,7 @@ class RequestedChangeListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="request_change").all() 
+            return Declaration.objects.filter(status="request_change") 
 
 
 class ListDrafts(generics.ListCreateAPIView):
@@ -250,7 +250,7 @@ class ListDrafts(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            return Declaration.objects.filter(user=user_id,status='draft').all()
+            return Declaration.objects.filter(user=user_id,status='draft')
 
     #user can create a declaration and it stays as drafts 
     def post(self, request,*args,**kwargs):
@@ -285,7 +285,7 @@ class UpdateDeclarationView(generics.UpdateAPIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!, expired token')
         user_id=payload['id']
-        return Declaration.objects.filter(user=user_id).all()
+        return Declaration.objects.filter(user=user_id)
 
     serializer_class = DeclarationSerializer
     def update(self, request, *args, **kwargs):
@@ -330,7 +330,7 @@ class ServiceDeclarationList(generics.ListAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            return Declaration.objects.filter(user=user_id).all()
+            return Declaration.objects.filter(user=user_id)
 
 #attaching declaration
 class AttachDeclarationView(generics.UpdateAPIView):
@@ -346,7 +346,22 @@ class AttachDeclarationView(generics.UpdateAPIView):
                         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Declaration.objects.all()
+        return Declaration.objects.filter(attached_to=None)
+    
+    def update(self, request, *args, **kwargs):
+                instance=self.get_object()
+                print(instance.id)
+                print(type(int(request.data["attached_to"])))
+                print(type(instance.id))
+
+                if int(request.data["attached_to"]) !=instance.id:
+                        return super().update(request, *args, **kwargs) 
+
+                else:
+                        return Response({"detail":"You are trying to attach the declaration to itself"}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+            
 #Deattach Declaration
 class DeattachDeclarationView(generics.GenericAPIView):
     serializer_class =BaseDeclarationSerializer
@@ -375,7 +390,6 @@ class DeattachDeclarationView(generics.GenericAPIView):
 class DeleteUserDeclaration(generics.DestroyAPIView):
     serializer_class = DeclarationSerializer
 
-    #user can see his own declarations
     def get_queryset(self):
             token = self.request.COOKIES.get('jwt')
                 
