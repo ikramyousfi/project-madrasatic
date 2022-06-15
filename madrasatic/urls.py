@@ -24,6 +24,8 @@ urlpatterns = [
     path('api/', include('users.urls')),
    # path('api/', include('roles.urls')),
     path('api/', include('signaux.urls')),
-    path('api/', include('reports.urls'))
+    path('api/', include('reports.urls')),
+        path('api/', include('announcements.urls'))
+
 
 ]
