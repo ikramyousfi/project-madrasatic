@@ -61,7 +61,7 @@ class ListDeclaration(generics.ListCreateAPIView):
 
 class DeclarationDetail(generics.RetrieveAPIView):
     serializer_class = DeclarationSerializer
-    #details about a specific declaration
+    #details about a specific declaration, everyone can see the detials of an approved declaration
     def get_queryset(self):
         
         token = self.request.COOKIES.get('jwt')
@@ -73,8 +73,7 @@ class DeclarationDetail(generics.RetrieveAPIView):
                 payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                 raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Declaration.objects.all()
-    
+        return Declaration.objects.filter(status="approved")   
 
 class CategoriesList(generics.ListCreateAPIView):
 
@@ -371,3 +370,21 @@ class DeattachDeclarationView(generics.GenericAPIView):
         except:
                 return Response({"detail":"error"}, status=status.HTTP_400_BAD_REQUEST)  
     
+
+#User can delete a declaration he created when it's draft or pending
+class DeleteUserDeclaration(generics.DestroyAPIView):
+    serializer_class = DeclarationSerializer
+
+    #user can see his own declarations
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            return Declaration.objects.filter(  Q(user=user_id,status="draft") or Q(user=user_id,status="pending"))

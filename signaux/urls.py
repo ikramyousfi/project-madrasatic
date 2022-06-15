@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ListDeclaration , CategoriesList, CategoryDetailView, DeclarationDetail,ToBeApprovedUpdateView,ToBeApprovedListView,RejectedListView,ApprovedListView,TreatedListView,RequestedChangeListView,ListDrafts,UpdateDeclarationView,AttachDeclarationView,DeattachDeclarationView
+from .views import DeleteUserDeclaration, ListDeclaration , CategoriesList, CategoryDetailView, DeclarationDetail,ToBeApprovedUpdateView,ToBeApprovedListView,RejectedListView,ApprovedListView,TreatedListView,RequestedChangeListView,ListDrafts,UpdateDeclarationView,AttachDeclarationView,DeattachDeclarationView
 urlpatterns = [
     path('ListDeclaration', ListDeclaration.as_view()),
     path('ListCategory', CategoriesList.as_view()),   
@@ -15,7 +15,7 @@ urlpatterns = [
     path('Update_declaration/<pk>', UpdateDeclarationView.as_view()),
     path('Attachdeclaration/<pk>', AttachDeclarationView.as_view()),
     path('Deattachdeclaration/<pk>', DeattachDeclarationView.as_view()),
-
+    path('Delete_declaration/<pk>', DeleteUserDeclaration.as_view()),
 
 ]
 
