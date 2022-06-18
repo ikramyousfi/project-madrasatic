@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from .serializers import DeclarationSerializer,CategorySerializer,DeclarationStatusSerializer,BaseDeclarationSerializer
 from rest_framework import generics
 from .models import Declaration  , Category, RequestForChange
@@ -65,14 +66,12 @@ class DeclarationDetail(generics.RetrieveAPIView):
         return Declaration.objects.filter(status="approved")   
 
 class CategoriesList(generics.ListCreateAPIView):
-
         serializer_class = CategorySerializer
         def get_queryset(self):
             token = self.request.COOKIES.get('jwt')
                 
             if not token:
                     raise AuthenticationFailed('Unauthenticated!')
-
             try:
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
@@ -82,20 +81,24 @@ class CategoriesList(generics.ListCreateAPIView):
             token = self.request.COOKIES.get('jwt')
             if not token:
                     raise AuthenticationFailed('Unauthenticated!')
-
             try:
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            request.data.update({"created_by":user_id})
-            serializer=self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        #get the current categories
-        #add another category, we need to override it in order to restrict it to the user 
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "admin" not in user_roles_types: 
+                raise IntegrityError("Only admins are allowed here!")
+            else:
+                request.data.update({"created_by":user_id})
+                serializer=self.serializer_class(data=request.data)
+                if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+           
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
@@ -110,9 +113,14 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
                 payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                 raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Category.objects.all()
-
-        #we need to override the put,patch and delete in order to restrict it to the user 
+        user_id=payload['id']
+        user= User.objects.get(id=user_id)
+        user_roles_types = [role.Type for role in user.role.all()]
+        print(user_roles_types)
+        if "admin" not in user_roles_types: 
+                raise IntegrityError("Only admins are allowed here!")
+        else:
+                return Category.objects.all()
 
     
 #change declarations status
@@ -133,12 +141,18 @@ class ToBeApprovedUpdateView(generics.UpdateAPIView):
                 except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
                 user_id = payload['id']
-                request.data.update({"responsable":user_id})
-                instance=self.get_object()
-                if request.data["status"]=="treated":
-                        instance.attached_declarations.update(status="treated")
+                user= User.objects.get(id=user_id)
+                user_roles_types = [role.Type for role in user.role.all()]
+                print(user_roles_types)
+                if "responsable" not in user_roles_types: 
+                        raise IntegrityError("Only responsibles are allowed here!")
+                else:
+                        request.data.update({"responsable":user_id})
+                        instance=self.get_object()
+                        if request.data["status"]=="treated":
+                                instance.attached_declarations.update(status="treated")
 
-                return super(ToBeApprovedUpdateView, self).update(request, *args, **kwargs)
+                        return super(ToBeApprovedUpdateView, self).update(request, *args, **kwargs)
     
 
 #List the Pending declarations for Responsible
@@ -155,7 +169,14 @@ class ToBeApprovedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="pending",attached_to=None)
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types: 
+                        raise IntegrityError("Only responsibles are allowed here!")
+            else:
+                 return Declaration.objects.filter(status="pending",attached_to=None)
 
 
 #List the rejected declarations for responsible
@@ -172,7 +193,14 @@ class RejectedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="rejected",attached_to=None)
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types: 
+                        raise IntegrityError("Only responsibles are allowed here!")
+            else:
+                return Declaration.objects.filter(status="rejected",attached_to=None)
    
             
 #List all approved declarations
@@ -189,6 +217,7 @@ class ApprovedListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
+            
             return Declaration.objects.filter(status="approved",attached_to=None)
 
 #List all treated declarations
@@ -221,7 +250,14 @@ class RequestedChangeListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Declaration.objects.filter(status="request_change") 
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types: 
+                        raise IntegrityError("Only responsibles are allowed here!")
+            else:
+                   return Declaration.objects.filter(status="request_change") 
 
 
 class ListDrafts(generics.ListCreateAPIView):
@@ -303,8 +339,7 @@ class UpdateDeclarationView(generics.UpdateAPIView):
 
 
 
-#List of declaration for each service Service
-#not implemented yet i need to figure out a way to link between the category and its service 
+#List of declaration for each service 
 class ServiceDeclarationList(generics.ListAPIView):
     serializer_class = DeclarationSerializer
 
@@ -319,7 +354,15 @@ class ServiceDeclarationList(generics.ListAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            return Declaration.objects.filter(user=user_id)
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "chef service" not in user_roles_types: 
+                raise IntegrityError("Only chef service are allowed here!")
+            else:
+                categories = [ role.category for role in user.role.all()]
+                return Declaration.objects.filter(status='approved',category__in=categories)
+
 
 
 
@@ -337,13 +380,17 @@ class AttachDeclarationView(generics.UpdateAPIView):
                         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Declaration.objects.filter(attached_to=None)
+        user_id = payload['id']
+        user= User.objects.get(id=user_id)
+        user_roles_types = [role.Type for role in user.role.all()]
+        print(user_roles_types)
+        if "responsable" not in user_roles_types: 
+                        raise IntegrityError("Only responsibles are allowed here!")
+        else:
+                return Declaration.objects.filter(attached_to=None)
     
     def update(self, request, *args, **kwargs):
                 instance=self.get_object()
-                print(instance.id)
-                print(type(int(request.data["attached_to"])))
-                print(type(instance.id))
 
                 if int(request.data["attached_to"]) !=instance.id:
                         return super().update(request, *args, **kwargs) 
@@ -364,7 +411,14 @@ class DeattachDeclarationView(generics.GenericAPIView):
                         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
-        return Declaration.objects.all()
+        user_id = payload['id']
+        user= User.objects.get(id=user_id)
+        user_roles_types = [role.Type for role in user.role.all()]
+        print(user_roles_types)
+        if "responsable" not in user_roles_types: 
+                        raise IntegrityError("Only responsibles are allowed here!")
+        else:
+                return Declaration.objects.all()
     def post(self, request,   *args, **kwargs):
         try:
                 declaration=self.get_object()

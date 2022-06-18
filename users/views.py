@@ -17,7 +17,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib import messages
 from django.urls import reverse
 import jwt, datetime
-from django.http import HttpResponsePermanentRedirect
+from django.http import HttpResponsePermanentRedirect,HttpResponseRedirect
 from django.shortcuts import redirect
 from rest_framework import status,generics
 from django.http import HttpResponse
@@ -27,6 +27,7 @@ from rest_framework import generics,status,views
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 import os
+from django.contrib.auth.models import Group
 
 
    
@@ -56,8 +57,13 @@ class RegisterView(generics.GenericAPIView):
                 data = {'email_body': email_body, 'to_email': to_email ,'email_subject': 'Verify your email'}
         
                 Util.send_email(data)
-            
-                return Response(user_data)
+                user.role.add(Role.objects.get(Type="simple user"))
+
+                return HttpResponseRedirect(redirect_to='https://google.com')
+
+                #return Response(user_data)
+
+
             else: 
                raise AuthenticationFailed('EMAIL INVALID')
             
@@ -99,9 +105,6 @@ class LoginView(APIView):
 
         if user is None:
                     raise AuthenticationFailed('User not found!')
-        
-
-
         if not user.check_password(password):
                 raise AuthenticationFailed('Incorrect password!')
             
@@ -138,7 +141,7 @@ class UserView(APIView):
         try:
             payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
+            raise AuthenticationFailed('Unauthenticated! expired token ')
 
         user = User.objects.filter(id=payload['id']).first()
         serializer = UserSerializer(user)
@@ -187,6 +190,7 @@ class UpdateProfileView(generics.UpdateAPIView):
         token = self.request.COOKIES.get('jwt')
         
         if not token:
+
             raise AuthenticationFailed('Unauthenticated!')
 
         try:
@@ -312,7 +316,6 @@ class Deactivate_account(generics.CreateAPIView):
 
 class RoleView(generics.ListCreateAPIView):
         serializer_class=roleSerializer
-        queryset=Role.objects.all()
         def get_queryset(self):
             token = self.request.COOKIES.get('jwt')
                 
@@ -331,14 +334,16 @@ class RoleView(generics.ListCreateAPIView):
                 if Role.objects.filter(category=request.data['category']).exists():
                     raise IntegrityError("role already exists!")
                 else:
-                    Role.objects.create(request)
+                    return self.create(request, *args, **kwargs)
+
             else:
                 if Role.objects.filter(Type=request.data['Type']).exists():
                     raise IntegrityError("role already exists!")
                 else:
-                    request.data['category']=NULL
-                    Role.objects.create(request)
-            return Response({"detail":"role added successfully"},status=status.HTTP_200_OK)
+                    request.data['category']=None
+                    return self.create(request, *args, **kwargs)
+
+           # return Response({"detail":"role added successfully"},status=status.HTTP_200_OK)
 class DeleteRoleView(generics.DestroyAPIView):
     serializer_class=roleSerializer
 

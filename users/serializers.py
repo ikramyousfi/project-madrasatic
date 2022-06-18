@@ -10,9 +10,10 @@ from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnico
 from signaux.models import Category
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers
     class Meta:
         model = User
-        fields =  "__all__" #['id', 'name', 'email', 'password'] 
+        fields = ['first_name','name', 'email','password', 'username', 'last_name','role','id']
         extra_kwargs = { 
             'password': {'write_only': True}
         }
@@ -25,6 +26,10 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance  
+    def to_representation(self, instance):
+        rep = super(UserSerializer, self).to_representation(instance)
+        rep['role'] = [role.Type for role in instance.role.all()]
+        return rep
 
 
 class EmailVerificationSerializer(serializers.ModelSerializer):

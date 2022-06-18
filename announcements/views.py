@@ -12,6 +12,8 @@ from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
 from django.db.models import Q
+from django.db import IntegrityError
+
 
 
 
@@ -32,9 +34,16 @@ class ListAnnouncement(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            return Announcement.objects.filter(created_by=user_id).all()
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "chef service"  in user_roles_types: 
+                return Announcement.objects.filter(created_by=user_id)
+            elif "club scientifique"  in user_roles_types:
+                return Announcement.objects.filter(created_by=user_id)
+            else:
+                raise IntegrityError("only scientific clubs and chef services are allowed here")
 
-    #user can create a declaration
     def post(self, request,*args,**kwargs):
             token = self.request.COOKIES.get('jwt')
             if not token:
@@ -45,16 +54,22 @@ class ListAnnouncement(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            request.data.update({"created_by":user_id})
-            request.data.update()
-            serializer=self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if ("chef service" not in user_roles_types) and ("club scientifique"  not in user_roles_types): 
+                        raise IntegrityError("only scientific clubs and chef services are allowed here")
+            else:
+                request.data.update({"created_by":user_id})
+                request.data.update()
+                serializer=self.serializer_class(data=request.data)
+                if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-#Service agent or club can update the announcementonly if it's requested for change 
+#Service agent or club can update the announcementonly if it's requested for change or drafts
 class UpdateAnnouncementView(generics.UpdateAPIView):
     def get_queryset(self):
         token = self.request.COOKIES.get('jwt')
@@ -65,17 +80,28 @@ class UpdateAnnouncementView(generics.UpdateAPIView):
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!, expired token')
         user_id=payload['id']
-        return Announcement.objects.filter(created_by=user_id).all()
+        user= User.objects.get(id=user_id)
+        user_roles_types = [role.Type for role in user.role.all()]
+        print(user_roles_types)
+        if ("chef service" not in user_roles_types) and ("club scientifique"  not in user_roles_types): 
+                        raise IntegrityError("only scientific clubs and chef services are allowed here")
+        else:
+                        return Announcement.objects.filter(created_by=user_id).all()
 
     serializer_class = AnnouncementSerializer
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         print(instance.status)
-        if instance.status=='request_change':
+        if instance.status=='draft':
+            serializer=self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+            return super(UpdateAnnouncementView,self).update(request, *args, **kwargs)
+        elif instance.status=='request_change':
             
             announcement_status='pending'
             request.data.update({"status":announcement_status})
-            AnnouncementRequestForChange.objects.filter(declaration=instance.id).update(checked=True)
+            AnnouncementRequestForChange.objects.filter(announcement=instance.id).update(checked=True)
             serializer=self.serializer_class(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -101,8 +127,14 @@ class ToBeApprovedAnnouncementsUpdateView(generics.UpdateAPIView):
                 except jwt.ExpiredSignatureError:
                         raise AuthenticationFailed('Unauthenticated!, expired token')
                 user_id = payload['id']
-                request.data.update({"responsable":user_id})
-                return super(ToBeApprovedAnnouncementsUpdateView, self).update(request, *args, **kwargs)
+                user= User.objects.get(id=user_id)
+                user_roles_types = [role.Type for role in user.role.all()]
+                print(user_roles_types)
+                if "responsable" not in user_roles_types : 
+                        raise IntegrityError("only responsibles are allowed here")
+                else:
+                        request.data.update({"responsable":user_id})
+                        return super(ToBeApprovedAnnouncementsUpdateView, self).update(request, *args, **kwargs)
 
     #details about a specific announcement
 class AnnouncementDetail(generics.RetrieveAPIView):
@@ -134,7 +166,14 @@ class ToBeApprovedAnnouncementListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Announcement.objects.filter(status="pending").all()
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types : 
+                        raise IntegrityError("only responsibles are allowed here")
+            else:
+                        return Announcement.objects.filter(status="pending").all()
 
 #List the Rejected Announcements for Responsible
 class RejectedAnnouncementListView(generics.ListAPIView):
@@ -150,7 +189,14 @@ class RejectedAnnouncementListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Announcement.objects.filter(status="rejected").all()
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types : 
+                        raise IntegrityError("only responsibles are allowed here")
+            else:
+                        return Announcement.objects.filter(status="rejected").all()
 
 #List the Approved Announcements for Responsible
 class ApprovedAnnouncementListView(generics.ListAPIView):
@@ -166,7 +212,14 @@ class ApprovedAnnouncementListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Announcement.objects.filter(status="approved").all()
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types : 
+                        raise IntegrityError("only responsibles are allowed here")
+            else:
+                        return Announcement.objects.filter(status="approved").all()
 
 #List the Change request announcements for Responsible
 class RequestChangeAnnouncementListView(generics.ListAPIView):
@@ -182,9 +235,17 @@ class RequestChangeAnnouncementListView(generics.ListAPIView):
                     payload = jwt.decode(token, 'secret', algorithms=['HS256'])
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
-            return Announcement.objects.filter(status="request_change").all()
+            user_id = payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if "responsable" not in user_roles_types : 
+                        raise IntegrityError("only responsibles are allowed here")
+            else:
+                        return Announcement.objects.filter(status="request_change").all()
 
-#Service agent or club  can delete a declaration he created when it's draft or pending
+
+#Service agent or club  can delete an announcement when it's pending
 
 class DeleteUserAnnouncement(generics.DestroyAPIView):  
     serializer_class = AnnouncementSerializer
@@ -199,4 +260,58 @@ class DeleteUserAnnouncement(generics.DestroyAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
-            return Announcement.objects.filter(  Q(created_by=user_id,status="draft") or Q(created_by=user_id,status="pending"))
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if ("chef service" not in user_roles_types) and ("club scientifique"  not in user_roles_types): 
+                        raise IntegrityError("only scientific clubs and chef services are allowed here")
+            else:
+                        return Announcement.objects.filter(  Q(created_by=user_id,status="draft") or Q(created_by=user_id,status="pending"))
+
+class ListDrafts(generics.ListCreateAPIView):
+    serializer_class = AnnouncementSerializer
+
+    #user can get a list of the declarations that are drafts
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if ("chef service" not in user_roles_types) and ("club scientifique"  not in user_roles_types): 
+                        raise IntegrityError("only scientific clubs and chef services are allowed here")
+            else:
+                return Announcement.objects.filter(created_by=user_id,status='draft')
+
+    #user can create a declaration and it stays as drafts 
+    def post(self, request,*args,**kwargs):
+            token = self.request.COOKIES.get('jwt')
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            user_id=payload['id']
+            user= User.objects.get(id=user_id)
+            user_roles_types = [role.Type for role in user.role.all()]
+            print(user_roles_types)
+            if ("chef service" not in user_roles_types) and ("club scientifique"  not in user_roles_types): 
+                        raise IntegrityError("only scientific clubs and chef services are allowed here")
+            else:
+                request.data.update({"user":user_id})
+
+                serializer=self.serializer_class(data=request.data)
+                if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

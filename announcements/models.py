@@ -8,6 +8,7 @@ class Announcement(models.Model):
         ('rejected', 'rejected'),
         ('approved', 'approved'),
         ('request_change','request_change'),
+        ('draft','draft')
         
     ]
     title=models.CharField(max_length=255)

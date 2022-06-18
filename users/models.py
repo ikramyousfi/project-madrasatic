@@ -48,23 +48,12 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
     
-    '''@property
-    def roles(self):
-        return self.role_set.all()
-
-    def has_perm(self, perm, obj=None):
-        return self.is_superuser
-
-    
-    def has_module_perms(self, app_label):
-        return True
-    
     def tokens(self):
         refresh = RefreshToken.for_user(self)
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token)
-        }'''
+        }
         
        
         
@@ -75,26 +64,4 @@ class Role(models.Model):
 
     def __str__(self):
         return self.Type
-    
-    '''def AssignRole(id_user,Type):
-            group = Group.objects.get(name=Type)
-            user=User.objects.get(id=id_user)
-            if group not in user.groups.all():
-                user.groups.add(group)
-                return True
-            else : return False
-    
-    
-    def UnassignRole(id_user,Type):
-        group = Group.objects.get(name=Type)
-        user = id_user
-        group.user_set.remove(user)
-    
-    def save(self,*args,**kwargs):
-        if self.Type=='admin':
-            if Role.objects.filter(name=self.Type).exists():
-                raise IntegrityError("an admin already exists!")
-        elif self.Type=="ServiceAgent":
-            if Role.objects.filter(category=self.category).exists():
-                raise IntegrityError("Only one service is allowed for each category!")
-        return super(Role,self).save(*args,**kwargs)'''
+ 
