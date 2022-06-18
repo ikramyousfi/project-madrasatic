@@ -4,7 +4,8 @@ from django.shortcuts import render
 from unittest import installHandler
 from django.shortcuts import render
 from .serializers import AnnouncementSerializer,AnnouncementStatusSerializer,AnnouncementRequestForChangeSerializer
-from .models import AnnouncementRequestForChange, User, Announcement
+from .models import AnnouncementRequestForChange, Announcement
+from users.models import User
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status

@@ -1,6 +1,7 @@
 from pkg_resources import require
 from rest_framework import serializers
-from .models import  AnnouncementRequestForChange,Announcement,User
+from .models import  AnnouncementRequestForChange,Announcement
+from users.models import User
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
 
