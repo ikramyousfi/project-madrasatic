@@ -1,12 +1,10 @@
-from django.db import models
-
+from statistics import mode
+from django.db import IntegrityError, models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager, PermissionsMixin, Group)
-
+from django.forms import model_to_dict
 from rest_framework_simplejwt.tokens import RefreshToken
-import encodings.idna
 from django.contrib.auth.models import Group
-
 # Create your models here.
 class UserManager(BaseUserManager):
     
@@ -40,6 +38,8 @@ class User(AbstractUser):
     username = models.CharField(max_length=20, unique=True, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     picture = models.ImageField(blank=True, null=True, upload_to='./pics')
+    role= models.ManyToManyField('users.Role', related_name='user' ,blank=True,null=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     
@@ -48,7 +48,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
     
-    @property
+    '''@property
     def roles(self):
         return self.role_set.all()
 
@@ -64,23 +64,19 @@ class User(AbstractUser):
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token)
-        }
+        }'''
         
-ROLE_CHOICES = (
-    ('simple user', 'simple user'),
-    ('chef service', 'chef service'),
-    ('responsable', 'responsable'),
-)        
+       
         
-class role(models.Model):
-    id_role= models.AutoField(primary_key=True, editable=False)
-    id_user= models.ForeignKey(User, on_delete=models.CASCADE)
-    Type = models.CharField(max_length=255, choices=ROLE_CHOICES)
-    
+class Role(models.Model):
+    Type = models.CharField(max_length=255)
+    category=models.OneToOneField('signaux.Category',on_delete=models.CASCADE,null=True,blank=True)
+   # user=models.ForeignKey(User,on_delete=models.CASCADE, null=True,blank=True)
+
     def __str__(self):
-        return self.get_Type_display() 
+        return self.Type
     
-    def addRole(id_user,Type):
+    '''def AssignRole(id_user,Type):
             group = Group.objects.get(name=Type)
             user=User.objects.get(id=id_user)
             if group not in user.groups.all():
@@ -89,7 +85,16 @@ class role(models.Model):
             else : return False
     
     
-    def deleteRole(id_user,Type):
+    def UnassignRole(id_user,Type):
         group = Group.objects.get(name=Type)
         user = id_user
         group.user_set.remove(user)
+    
+    def save(self,*args,**kwargs):
+        if self.Type=='admin':
+            if Role.objects.filter(name=self.Type).exists():
+                raise IntegrityError("an admin already exists!")
+        elif self.Type=="ServiceAgent":
+            if Role.objects.filter(category=self.category).exists():
+                raise IntegrityError("Only one service is allowed for each category!")
+        return super(Role,self).save(*args,**kwargs)'''

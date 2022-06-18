@@ -1,3 +1,5 @@
+from unicodedata import category
+from pymysql import NULL
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -5,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.exceptions import ValidationError
 #from .serializers import UserSerializer, ChangePasswordSerializer, UpdateUserSerializer,EmailVerificationSerializer
-#from .serializers import UserSerializer, ChangePasswordSerializer, RequestPasswordResetEmailSerializer, SetNewPasswordSerializer, UpdateUserSerializer, DeactivateAccountSerializer
+from .serializers import UserSerializer, ChangePasswordSerializer, RequestPasswordResetEmailSerializer, SetNewPasswordSerializer, UpdateUserSerializer, DeactivateAccountSerializer
 from .models import *
 from .serializers import *
 from .utils import Util
@@ -57,7 +59,7 @@ class RegisterView(generics.GenericAPIView):
             
                 return Response(user_data)
             else: 
-                raise AuthenticationFailed('EMAIL INVALID')
+               raise AuthenticationFailed('EMAIL INVALID')
             
         else: 
             raise AuthenticationFailed('EMAIL INVALID')
@@ -76,7 +78,6 @@ class VerifyEmail(APIView):
             payload = jwt.decode(token, settings.SECRET_KEY)
             user = User.objects.get(id=payload['user_id'])
             if  not user.is_verified:
-               # print(user.is_verified, "ggggggg")
                 user.is_verified = True
                 user.save()
             return Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
@@ -94,33 +95,36 @@ class LoginView(APIView):
         
 
         user = User.objects.filter(email=email).first()
-        
+       # if user.is_verified:
+
         if user is None:
-                raise AuthenticationFailed('User not found!')
-     
+                    raise AuthenticationFailed('User not found!')
+        
 
 
         if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
-        
+                raise AuthenticationFailed('Incorrect password!')
+            
         if not user.is_active:
-            raise AuthenticationFailed('your acount is disabled!')
+                raise AuthenticationFailed('your acount is disabled!')
 
         payload = {
-            'id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow()
-        }
+                'id': user.id,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                'iat': datetime.datetime.utcnow()
+            }
 
-        token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
-        #token = jwt.encode(payload, 'secret', algorithm='HS256')
+        token = jwt.encode(payload, 'secret', algorithm='HS256')
+            #token = jwt.encode(payload, 'secret', algorithm='HS256')
         response = Response()
 
         response.set_cookie(key='jwt', value=token, httponly=True)
         response.data = {
-            'jwt': token
-        }
+                'jwt': token
+            }
         return response
+       # else:
+            #return Response({"detail":"Go and confirm your email"},status=status.HTTP_400_BAD_REQUEST)
     
 
 class UserView(APIView):
@@ -138,6 +142,7 @@ class UserView(APIView):
 
         user = User.objects.filter(id=payload['id']).first()
         serializer = UserSerializer(user)
+        print()
         return Response(serializer.data)
     
 
@@ -305,35 +310,108 @@ class Deactivate_account(generics.CreateAPIView):
         else:
             return Response({ 'success':False,'message': 'A password is required to deactivate your account'}, status=status.HTTP_400_BAD_REQUEST)
 
-class roleView(viewsets.ModelViewSet):
-    serializer_class = roleSerializer
-    queryset = role.objects.all()
+class RoleView(generics.ListCreateAPIView):
+        serializer_class=roleSerializer
+        queryset=Role.objects.all()
+        def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
 
-    
-    def create(self, request):
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            return Role.objects.all()
+        
+        def post(self, request, *args, **kwargs):
+            if request.data["Type"]=="chef service":
+                request.data['category'] =  Category.objects.only('id').get(title=request.data['category'])
+                if Role.objects.filter(category=request.data['category']).exists():
+                    raise IntegrityError("role already exists!")
+                else:
+                    Role.objects.create(request)
+            else:
+                if Role.objects.filter(Type=request.data['Type']).exists():
+                    raise IntegrityError("role already exists!")
+                else:
+                    request.data['category']=NULL
+                    Role.objects.create(request)
+            return Response({"detail":"role added successfully"},status=status.HTTP_200_OK)
+class DeleteRoleView(generics.DestroyAPIView):
+    serializer_class=roleSerializer
+
+    def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            return Role.objects.all()
+
+
+class RoleAssignmentView(generics.CreateAPIView):
+    serializer_class=roleuUerSerializer
+    queryset=Role.objects.all()
+    def post(self, request, *args, **kwargs):
         token = self.request.COOKIES.get('jwt')
-        payload = jwt.decode(token, 'secret', algorithms=['HS256'])
-        user = User.objects.filter(id=payload['id']).first()
-        
-        
-        test=role.addRole(request.data['id_user'], request.data['Type'])
-        #print(request.data['id_user'])
-        #print(test)
         
         if not token:
-            raise AuthenticationFailed('Admin Unauthenticated!')   
+                raise AuthenticationFailed('Unauthenticated!')
+
+        try:
+                payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+                raise AuthenticationFailed('Unauthenticated!, expired token')
+        if request.data["Type"]=="chef service":
+            request.data['category'] =  Category.objects.only('id').get(title=request.data['category'])
+            if Role.objects.filter(category=request.data['category']).exists():
+                user=User.objects.get(id=request.data["user"])
+                user.role.add(Role.objects.get(category=request.data['category']))
+                return Response({"detail":"user assigned successfully"},status=status.HTTP_200_OK)
+            else:
+                raise IntegrityError("role does not exist!")
         else:
-            if user.is_superuser:
-                if test is True:
-                    return super().create(request)
-            
-                if test is False:
-                    return Response({"detail": 'role already exists'}, status=status.HTTP_200_OK)
-                
-            else : return Response({"detail": 'Please connect as admin to gives roles'}, status=status.HTTP_200_OK)
+            if Role.objects.filter(Type=request.data['Type']).exists():
+                user=User.objects.get(id=request.data["user"])
+                user.role.add(Role.objects.get(Type=request.data['Type']))
+                return Response({"detail":"user assigned successfully"},status=status.HTTP_200_OK)
+            else:
+                raise IntegrityError("role does not exist!")
+
+class UnassignRoleView(generics.GenericAPIView):
+        serializer_class=roleuUerSerializer
         
-    def destroy(self, request, *args, **kwargs):
-        role.deleteRole(self.get_object().id_user,self.get_object().Type)
-        return super().destroy(request)
+        def get_queryset(self):
+            token = self.request.COOKIES.get('jwt')
+                
+            if not token:
+                    raise AuthenticationFailed('Unauthenticated!')
+
+            try:
+                    payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                    raise AuthenticationFailed('Unauthenticated!, expired token')
+            return Role.objects.all()
+        def post(self, request,   *args, **kwargs):
+            try:
+                instance=self.get_object()
+                user=User.objects.get(id=request.data["user"])
+                user.role.remove(instance)
+                return Response({"detail":"role unassigned successfully"}, status=status.HTTP_200_OK)
+            except:
+                return Response({"detail":"error"}, status=status.HTTP_400_BAD_REQUEST)  
     
+
+
+
+
+
+
+
     

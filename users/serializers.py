@@ -7,6 +7,7 @@ import jwt
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from signaux.models import Category
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -158,6 +159,26 @@ class DeactivateAccountSerializer(serializers.Serializer):
         
 
 class roleSerializer(serializers.ModelSerializer):
+    category=serializers.StringRelatedField()
     class Meta:
-        model = role
-        fields = '__all__'
+        model = Role
+        fields = ['Type','category']
+  
+    def to_internal_value(self, data):
+      try:
+        if data['Type']=='chef service':
+           data['category'] =  Category.objects.only('id').get(title=data['category'])
+        return data
+      except Category.DoesNotExist:
+          raise IntegrityError("Category does not exist")
+
+class roleuUerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Role
+        fields=['Type','user','category']
+    def to_internal_value(self, data):
+         try:
+           data['user'] =  [User.objects.get(id=data['user'])]  
+           return data
+         except User.DoesNotExist:
+           raise IntegrityError("User does not exist")

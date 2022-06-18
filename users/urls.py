@@ -3,15 +3,9 @@ from .views import *
 from rest_framework import routers
 from django.urls import include
 
-from .views import RegisterView, LoginView, UserView,  LogoutView, VerifyEmail,Deactivate_account, ChangePasswordView, UpdateProfileView,RequestPasswordResetEmailView,SetNewPasswordAPIView,PasswordTokenCheckAPI
-
-
-router = routers.DefaultRouter()
-router.register(r'roles', roleView, basename='roles')
-
+from .views import RegisterView, LoginView, UserView,  LogoutView, VerifyEmail,Deactivate_account, ChangePasswordView, UpdateProfileView,RequestPasswordResetEmailView,SetNewPasswordAPIView,PasswordTokenCheckAPI,RoleView
 
 urlpatterns = [
-    path('gestionComptes/', include(router.urls)),
     path('register', RegisterView.as_view()),
     path('login', LoginView.as_view()),
     path('user', UserView.as_view()),
@@ -27,6 +21,13 @@ urlpatterns = [
     path('password_reset/<uidb64>/<token>/',
          PasswordTokenCheckAPI.as_view(), name='password-reset-confirm'),
     path('password_reset_complete', SetNewPasswordAPIView.as_view(),
-         name='password-reset-complete')
+         name='password-reset-complete'),
+     path('roles', RoleView.as_view()),
+     path('delete_role/<pk>', DeleteRoleView.as_view()),
+
+     path('roles_assignment', RoleAssignmentView.as_view()),
+     path('unassign_role/<pk>', UnassignRoleView.as_view()),
+
+
 ]
 
