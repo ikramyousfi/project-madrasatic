@@ -1,31 +1,18 @@
-from urllib import response
-from django.shortcuts import render
-from rest_framework.views import APIView
 from .serializers import DeclarationSerializer,CategorySerializer,DeclarationStatusSerializer,BaseDeclarationSerializer
-from users.serializers import UserSerializer
 from rest_framework import generics
 from .models import Declaration  , Category, RequestForChange
 from users.models import User
 from rest_framework.response import Response
-from django.contrib import messages
-from django.contrib.auth import authenticate, login
 import jwt
-from django.contrib import auth
-from django.conf import settings
 from rest_framework import status
-from django.contrib.sessions.models import Session
-from django.contrib.auth.models import User
 from rest_framework.exceptions import AuthenticationFailed
-from django.http import HttpResponse
 from django.db.models import Q
 # Create your views here.
 class ListDeclaration(generics.ListCreateAPIView):
     serializer_class = DeclarationSerializer
-
     #user can see his own declarations
     def get_queryset(self):
             token = self.request.COOKIES.get('jwt')
-                
             if not token:
                     raise AuthenticationFailed('Unauthenticated!')
 
@@ -34,6 +21,8 @@ class ListDeclaration(generics.ListCreateAPIView):
             except jwt.ExpiredSignatureError:
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
+            user = User.objects.get(id=user_id)
+            print(user.id)
             return Declaration.objects.filter(user=user_id)
 
     #user can create a declaration
@@ -331,6 +320,8 @@ class ServiceDeclarationList(generics.ListAPIView):
                     raise AuthenticationFailed('Unauthenticated!, expired token')
             user_id=payload['id']
             return Declaration.objects.filter(user=user_id)
+
+
 
 #attaching declaration
 class AttachDeclarationView(generics.UpdateAPIView):
