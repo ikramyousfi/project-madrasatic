@@ -1,6 +1,8 @@
 from pkg_resources import require
 from rest_framework import serializers
-from .models import  ReportRequestForChange,Report,User,Declaration
+from .models import  ReportRequestForChange,Report
+from signaux.models import Declaration
+from users.models import User
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
 

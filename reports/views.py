@@ -1,7 +1,9 @@
 from unittest import installHandler
 from django.shortcuts import render
 from .serializers import ReportRequestForChangeSerializer,ReportSerializer,ReportStatusSerializer
-from .models import Report, User, ReportRequestForChange, Declaration
+from .models import Report, ReportRequestForChange
+from users.models import User
+from signaux.models import Declaration
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
