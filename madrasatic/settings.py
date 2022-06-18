@@ -27,7 +27,6 @@ SECRET_KEY = 'django-insecure-n1t$i%vqx7zvj&0wjq^q4mi9zvt*$l+^r*ufs+7%n(ew5vy#)8
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-import encodings.idna
 
 AUTH_USER_MODEL = 'users.User'
 # Application definition
@@ -50,16 +49,19 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware'
+]
+CORS_ORIGIN_WHITELIST=[
+    'http://localhost:3000',
 ]
 '''REST_FRAMEWORK ={ 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -100,7 +102,7 @@ WSGI_APPLICATION = 'madrasatic.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'madrasatic_6',
+        'NAME': 'madrasatic_8',
         'USER': 'root',
         'PASSWORD': 'chichi34',
         'POST': 'localhost',
@@ -163,7 +165,7 @@ EMAIL_USE_SSL = False
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'shiftmadrasatic@gmail.com'
-EMAIL_HOST_PASSWORD = 'shiftprojet2022'
+EMAIL_HOST_PASSWORD = 'qxtzfpwaihwtqbmt'
 
 
 
