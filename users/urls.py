@@ -12,6 +12,7 @@ router.register(r'roles', roleView, basename='roles')
 
 urlpatterns = [
     path('gestionComptes/', include(router.urls)),
+   
     path('register', RegisterView.as_view()),
     path('login', LoginView.as_view()),
     path('user', UserView.as_view()),

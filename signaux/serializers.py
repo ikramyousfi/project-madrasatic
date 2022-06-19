@@ -11,7 +11,10 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields="__all__"
 
-
+# class ChefServiceSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ChefService
+#         fields = '__all__'
 
 class RequestForChangeSerializer(serializers.ModelSerializer):
     class Meta:

@@ -12,7 +12,7 @@ class UserManager(BaseUserManager):
     
     def create_user(self, email, password=None):
         if email is None:
-            raise TypeError('Users should have a Email')
+            raise TypeError('Users should have an Email')
  
         user = self.model(email=self.normalize_email(email))
         user.set_password(password)
@@ -71,14 +71,19 @@ ROLE_CHOICES = (
     ('chef service', 'chef service'),
     ('responsable', 'responsable'),
 )        
-        
+
+ 
 class role(models.Model):
     id_role= models.AutoField(primary_key=True, editable=False)
     id_user= models.ForeignKey(User, on_delete=models.CASCADE)
     Type = models.CharField(max_length=255, choices=ROLE_CHOICES)
+   
     
     def __str__(self):
         return self.get_Type_display() 
+    
+    
+        
     
     def addRole(id_user,Type):
             group = Group.objects.get(name=Type)

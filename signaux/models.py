@@ -12,7 +12,12 @@ class Category(models.Model):
     description = models.CharField(max_length=255)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Category")
 
-    
+# class ChefService(models.Model):
+#     id=models.AutoField(primary_key=True, editable=False)
+#     id_user=models.ForeignKey( User, on_delete=models.CASCADE)     
+#     id_category= models.ForeignKey( Category, on_delete=models.CASCADE)          
+
+
 class Declaration(models.Model):
     status = [
         ('pending', 'pending'),
@@ -32,7 +37,9 @@ class Declaration(models.Model):
     place= models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=255,choices=status,default='draft',)
     
+    
 
+    
 class RequestForChange(models.Model):
   title = models.CharField(max_length=255, blank=True, null=True)
   comment = models.TextField(max_length=255, blank=True, null=True)

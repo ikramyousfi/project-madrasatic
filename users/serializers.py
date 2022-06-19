@@ -11,7 +11,7 @@ from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnico
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields =  "__all__" #['id', 'name', 'email', 'password'] 
+        fields =  ['id', 'name', 'email', 'password'] 
         extra_kwargs = { 
             'password': {'write_only': True}
         }
@@ -161,3 +161,8 @@ class roleSerializer(serializers.ModelSerializer):
     class Meta:
         model = role
         fields = '__all__'
+        
+# class servicesSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = services
+#         fields = '__all__' 

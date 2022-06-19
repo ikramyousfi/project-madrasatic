@@ -132,7 +132,7 @@ class UserView(APIView):
             raise AuthenticationFailed('Unauthenticated!')   
         
         try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
         except jwt.ExpiredSignatureError:
             raise AuthenticationFailed('Unauthenticated!')
 
@@ -315,25 +315,36 @@ class roleView(viewsets.ModelViewSet):
         payload = jwt.decode(token, 'secret', algorithms=['HS256'])
         user = User.objects.filter(id=payload['id']).first()
         
-        
         test=role.addRole(request.data['id_user'], request.data['Type'])
-        #print(request.data['id_user'])
-        #print(test)
-        
         if not token:
             raise AuthenticationFailed('Admin Unauthenticated!')   
-        else:
+        try:
+            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!')
+        
+        if token:
             if user.is_superuser:
                 if test is True:
                     return super().create(request)
-            
                 if test is False:
                     return Response({"detail": 'role already exists'}, status=status.HTTP_200_OK)
                 
-            else : return Response({"detail": 'Please connect as admin to gives roles'}, status=status.HTTP_200_OK)
+            else : return Response({"detail": 'Please connect as admin to gives roles'}, status=status.HTTP_400_BAD_REQUEST)
         
     def destroy(self, request, *args, **kwargs):
         role.deleteRole(self.get_object().id_user,self.get_object().Type)
         return super().destroy(request)
     
+# class Services(generics.GenericAPIView):
+#     serializer_class = servicesSerializer
     
+#     def post(self, request):
+#             service = request.data
+#             serializer = self.serializer_class(data=service)
+#             serializer.is_valid(raise_exception=True)
+#             serializer.save()
+#             service_data = serializer.data
+           
+#             return Response(service_data)
+     

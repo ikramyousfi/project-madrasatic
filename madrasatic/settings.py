@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project your project  like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,6 +35,7 @@ AUTH_USER_MODEL = 'users.User'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+     #'rest_framework.authtoken',
     'corsheaders',
     'users',
     'signaux',
@@ -118,7 +121,12 @@ REST_FRAMEWORK = {
     )
 }
 
-
+# TIMED_AUTH_TOKEN = {
+#     'DEFAULT_VALIDITY_DURATION': timedelta(days=45)
+# }
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=600),
+}    
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -163,11 +171,11 @@ EMAIL_USE_SSL = False
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'shiftmadrasatic@gmail.com'
-EMAIL_HOST_PASSWORD = 'shiftprojet2022'
+EMAIL_HOST_PASSWORD = 'qxtzfpwaihwtqbmt'
 
 
 
-
+#shiftprojet2022
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
