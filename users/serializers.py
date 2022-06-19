@@ -7,11 +7,17 @@ import jwt
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from signaux.models import Category
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers
     class Meta:
         model = User
+<<<<<<< HEAD
         fields =  ['id', 'name', 'email', 'password'] 
+=======
+        fields = ['first_name','name', 'email','password', 'username', 'last_name','role','id']
+>>>>>>> 5e0ce5c03ecea39e5e56b12921703152fb47de69
         extra_kwargs = { 
             'password': {'write_only': True}
         }
@@ -24,6 +30,10 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance  
+    def to_representation(self, instance):
+        rep = super(UserSerializer, self).to_representation(instance)
+        rep['role'] = [role.Type for role in instance.role.all()]
+        return rep
 
 
 class EmailVerificationSerializer(serializers.ModelSerializer):
@@ -158,7 +168,9 @@ class DeactivateAccountSerializer(serializers.Serializer):
         
 
 class roleSerializer(serializers.ModelSerializer):
+    category=serializers.StringRelatedField()
     class Meta:
+<<<<<<< HEAD
         model = role
         fields = '__all__'
         
@@ -166,3 +178,26 @@ class roleSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = services
 #         fields = '__all__' 
+=======
+        model = Role
+        fields = ['Type','category']
+  
+    def to_internal_value(self, data):
+      try:
+        if data['Type']=='chef service':
+           data['category'] =  Category.objects.only('id').get(title=data['category'])
+        return data
+      except Category.DoesNotExist:
+          raise IntegrityError("Category does not exist")
+
+class roleuUerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Role
+        fields=['Type','user','category']
+    def to_internal_value(self, data):
+         try:
+           data['user'] =  [User.objects.get(id=data['user'])]  
+           return data
+         except User.DoesNotExist:
+           raise IntegrityError("User does not exist")
+>>>>>>> 5e0ce5c03ecea39e5e56b12921703152fb47de69

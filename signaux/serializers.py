@@ -1,3 +1,4 @@
+from pkg_resources import require
 from rest_framework import serializers
 from .models import Category, Declaration, RequestForChange
 from rest_framework.exceptions import AuthenticationFailed
@@ -10,7 +11,6 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields="__all__"
-
 # class ChefServiceSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = ChefService
@@ -21,17 +21,38 @@ class RequestForChangeSerializer(serializers.ModelSerializer):
         model = RequestForChange
         fields = "__all__"
 
+class BaseDeclarationSerializer(serializers.ModelSerializer):
+    change_requests = RequestForChangeSerializer(many=True, required=False)
+    category = serializers.StringRelatedField()
+    class Meta:
+        model = Declaration
+        fields = '__all__'
+  
+
 class DeclarationSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
-
+    category = serializers.StringRelatedField()
+    attached_declarations=BaseDeclarationSerializer(many=True,required=False,read_only=True)
     class Meta:
         model = Declaration
         fields = '__all__'
         #read_only_fields=['status']
+    def to_representation(self, instance):
+        rep = super(DeclarationSerializer, self).to_representation(instance)
+        rep['category'] = instance.category.title
+        return rep
+    def to_internal_value(self, data):
+      try:
+        data['user'] = User.objects.get(id=data['user'])
+        data['category'] =  Category.objects.only('id').get(title=data['category'])
+        return data 
+      except:
+          raise Category.DoesNotExist("Category does not exist")
 
+     
 class DeclarationStatusSerializer(serializers.ModelSerializer):
     change_requests = RequestForChangeSerializer(many=True, required=False)
-   # change_requests_list = validated_data.pop("change_requests", None)
+    attached_declarations=BaseDeclarationSerializer(many=True,required=False,read_only=True)
 
     def update(self, instance, validated_data):
         change_requests_list = validated_data.pop("change_requests", None)

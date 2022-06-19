@@ -1,12 +1,10 @@
-from django.db import models
-
+from statistics import mode
+from django.db import IntegrityError, models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager, PermissionsMixin, Group)
-
+from django.forms import model_to_dict
 from rest_framework_simplejwt.tokens import RefreshToken
-import encodings.idna
 from django.contrib.auth.models import Group
-
 # Create your models here.
 class UserManager(BaseUserManager):
     
@@ -40,6 +38,8 @@ class User(AbstractUser):
     username = models.CharField(max_length=20, unique=True, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     picture = models.ImageField(blank=True, null=True, upload_to='./pics')
+    role= models.ManyToManyField('users.Role', related_name='user' ,blank=True,null=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     
@@ -48,17 +48,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
     
-    @property
-    def roles(self):
-        return self.role_set.all()
-
-    def has_perm(self, perm, obj=None):
-        return self.is_superuser
-
-    
-    def has_module_perms(self, app_label):
-        return True
-    
     def tokens(self):
         refresh = RefreshToken.for_user(self)
         return {
@@ -66,6 +55,7 @@ class User(AbstractUser):
             'access': str(refresh.access_token)
         }
         
+<<<<<<< HEAD
 ROLE_CHOICES = (
     ('simple user', 'simple user'),
     ('chef service', 'chef service'),
@@ -98,3 +88,15 @@ class role(models.Model):
         group = Group.objects.get(name=Type)
         user = id_user
         group.user_set.remove(user)
+=======
+       
+        
+class Role(models.Model):
+    Type = models.CharField(max_length=255)
+    category=models.OneToOneField('signaux.Category',on_delete=models.CASCADE,null=True,blank=True)
+   # user=models.ForeignKey(User,on_delete=models.CASCADE, null=True,blank=True)
+
+    def __str__(self):
+        return self.Type
+ 
+>>>>>>> 5e0ce5c03ecea39e5e56b12921703152fb47de69

@@ -27,8 +27,7 @@ SECRET_KEY = 'django-insecure-n1t$i%vqx7zvj&0wjq^q4mi9zvt*$l+^r*ufs+7%n(ew5vy#)8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-import encodings.idna
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.User'
 # Application definition
@@ -47,22 +46,25 @@ INSTALLED_APPS = [
     'corsheaders',
     'users',
     'signaux',
-    
-    
+    'reports',
+    'announcements'
 ]
 
 SITE_ID = 1
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware'
+]
+CORS_ORIGIN_WHITELIST=[
+    'http://localhost:3000',
 ]
 '''REST_FRAMEWORK ={ 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -103,9 +105,9 @@ WSGI_APPLICATION = 'madrasatic.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'madrasatic',
+        'NAME': 'madrasatic_8',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'chichi34',
         'POST': 'localhost',
         'POST':'3306'
     }
@@ -172,6 +174,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'shiftmadrasatic@gmail.com'
 EMAIL_HOST_PASSWORD = 'qxtzfpwaihwtqbmt'
+
 
 
 
